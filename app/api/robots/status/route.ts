@@ -1,0 +1,31 @@
+import { changeRobotStatus } from "@/lib/store";
+import { requireAdmin } from "@/lib/auth";
+import { ORDER_STATUSES } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(request: Request) {
+  try {
+    await requireAdmin();
+    const body = await request.json();
+    const { robotId, status, operatorName, note } = body as {
+      robotId?: string;
+      status?: string;
+      operatorName?: string;
+      note?: string;
+    };
+    if (!robotId || !status || !operatorName) {
+      throw new Error("robotId、status 和 operatorName 为必填项");
+    }
+    if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
+      throw new Error("无效的订单状态");
+    }
+    const robot = await changeRobotStatus(robotId, status as (typeof ORDER_STATUSES)[number], operatorName, note ?? "");
+    return Response.json({ data: robot });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "更新失败" },
+      { status: 400 }
+    );
+  }
+}

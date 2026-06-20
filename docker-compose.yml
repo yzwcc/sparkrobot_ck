@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: warehouse-robot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: warehouse_robot
+    ports:
+      - "5432:5432"
+    volumes:
+      - warehouse_robot_pgdata:/var/lib/postgresql/data
+
+volumes:
+  warehouse_robot_pgdata:
+

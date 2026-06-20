@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RobotTypeCode {
+  YUANZHENG_A3
+  YUANZHENG_A2
+  LINGXI_X2_FLAGSHIP
+  LINGXI_X2_YOUTH
+}
+
+enum OrderStatus {
+  IDLE
+  DAILY_RENTAL
+  MONTHLY_RENTAL
+  SALE
+  REPAIR
+  DAMAGED
+  MISSING_ACCESSORIES
+}
+
+enum StockAction {
+  IN
+  OUT
+  STATUS
+}
+
+enum RoleName {
+  ADMIN
+  USER
+}
+
+model Role {
+  id    String   @id @default(cuid())
+  name  RoleName @unique
+  users User[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  displayName String
+  password  String
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  records   StockRecord[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  location  String
+  robots    Robot[]
+  records   StockRecord[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Robot {
+  id          String         @id @default(cuid())
+  sn          String         @unique
+  type        RobotTypeCode
+  status      OrderStatus    @default(IDLE)
+  note        String         @default("")
+  warehouseId String?
+  warehouse   Warehouse?     @relation(fields: [warehouseId], references: [id])
+  records     StockRecord[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model StockRecord {
+  id           String      @id @default(cuid())
+  action       StockAction
+  robotId      String
+  robot        Robot       @relation(fields: [robotId], references: [id])
+  warehouseId  String?
+  warehouse    Warehouse?  @relation(fields: [warehouseId], references: [id])
+  operatorName String
+  statusBefore OrderStatus?
+  statusAfter  OrderStatus?
+  note         String      @default("")
+  occurredAt   DateTime
+  createdAt    DateTime    @default(now())
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id])
+
+  @@index([warehouseId, occurredAt])
+  @@index([robotId, occurredAt])
+}
+
