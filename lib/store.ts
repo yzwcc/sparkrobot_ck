@@ -14,7 +14,6 @@ import {
   StockAction,
   StockOrigin,
   StockRecord,
-  Warehouse,
   WarehouseInput
 } from "@/lib/types";
 import type { $Enums } from "@prisma/client";
@@ -304,14 +303,14 @@ async function createAuditRecord(params: {
     data: {
       action: params.action,
       origin: params.origin,
-        robotId: params.robotId,
-        warehouseId: params.warehouseId,
-        operatorName: normalizeText(params.operatorName) || "未填写",
-        snPhotoUrl: params.snPhotoUrl ?? null,
-        statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
-        statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
-        note: normalizeText(params.note),
-        occurredAt: new Date(),
+      robotId: params.robotId,
+      warehouseId: params.warehouseId,
+      operatorName: normalizeText(params.operatorName) || "未填写",
+      snPhotoUrl: params.snPhotoUrl ?? null,
+      statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
+      statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
+      note: normalizeText(params.note),
+      occurredAt: new Date(),
       userId: params.operatorId ?? null
     }
   });
@@ -349,6 +348,9 @@ export async function getWarehouseByCode(code: string) {
 export async function createWarehouse(input: WarehouseInput) {
   const code = normalizeText(input.code).toUpperCase();
   if (!code) throw new Error("仓库编号不能为空");
+  if (!normalizeText(input.name)) throw new Error("仓库名称不能为空");
+  if (!normalizeText(input.location)) throw new Error("仓库地址不能为空");
+
   await prisma.warehouse.create({
     data: {
       code,
@@ -356,6 +358,60 @@ export async function createWarehouse(input: WarehouseInput) {
       location: normalizeText(input.location)
     }
   });
+
+  return { ok: true };
+}
+
+export async function updateWarehouse(code: string, input: { name?: string; location?: string }) {
+  const normalizedCode = normalizeText(code).toUpperCase();
+  const warehouse = await prisma.warehouse.findUnique({
+    where: { code: normalizedCode }
+  });
+  if (!warehouse) throw new Error("仓库不存在");
+
+  const nextName = input.name === undefined ? undefined : normalizeText(input.name);
+  const nextLocation = input.location === undefined ? undefined : normalizeText(input.location);
+
+  if (nextName !== undefined && !nextName) throw new Error("仓库名称不能为空");
+  if (nextLocation !== undefined && !nextLocation) throw new Error("仓库地址不能为空");
+
+  const next = await prisma.warehouse.update({
+    where: { code: normalizedCode },
+    data: {
+      name: nextName,
+      location: nextLocation
+    }
+  });
+
+  return {
+    id: next.id,
+    code: next.code,
+    name: next.name,
+    location: next.location,
+    createdAt: toIso(next.createdAt),
+    updatedAt: toIso(next.updatedAt)
+  };
+}
+
+export async function deleteWarehouse(code: string) {
+  const normalizedCode = normalizeText(code).toUpperCase();
+  const warehouse = await prisma.warehouse.findUnique({
+    where: { code: normalizedCode }
+  });
+  if (!warehouse) throw new Error("仓库不存在");
+
+  await prisma.$transaction([
+    prisma.robot.updateMany({
+      where: { warehouseId: warehouse.id },
+      data: { warehouseId: null }
+    }),
+    prisma.stockRecord.updateMany({
+      where: { warehouseId: warehouse.id },
+      data: { warehouseId: null }
+    }),
+    prisma.warehouse.delete({ where: { id: warehouse.id } })
+  ]);
+
   return { ok: true };
 }
 
@@ -442,7 +498,15 @@ export async function updateRobot(
 }
 
 export async function deleteRobot(robotId: string) {
-  await prisma.robot.delete({ where: { id: robotId } });
+  const robot = await prisma.robot.findUnique({ where: { id: robotId } });
+  if (!robot) throw new Error("机器人不存在");
+
+  await prisma.$transaction([
+    prisma.stockRecord.deleteMany({ where: { robotId } }),
+    prisma.robot.delete({ where: { id: robotId } })
+  ]);
+
+  return { ok: true };
 }
 
 export async function checkInRobot(
@@ -624,5 +688,3 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     recentRecords: data.records.slice(0, 10)
   };
 }
-
-

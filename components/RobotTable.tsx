@@ -68,7 +68,7 @@ export function RobotTable({
                         startTransition(async () => {
                           try {
                             await submitJson(`/api/robots/${robot.id}`, "PATCH", { sn: nextSn });
-                            setMessage("已更新");
+                            setMessage(`机器人 ${robot.sn} 已更新`);
                             router.refresh();
                           } catch (error) {
                             setMessage(error instanceof Error ? error.message : "更新失败");
@@ -79,14 +79,14 @@ export function RobotTable({
                       编辑 SN
                     </button>
                     <button
-                      className="button-secondary"
+                      className="button-secondary danger-button"
                       disabled={isPending}
                       onClick={() => {
-                        if (!confirm(`确定删除机器人 ${robot.sn} 吗？`)) return;
+                        if (!confirm(`确定删除机器人 ${robot.sn} 吗？该机器人的历史记录也会一起删除。`)) return;
                         startTransition(async () => {
                           try {
                             await submitJson(`/api/robots/${robot.id}`, "DELETE");
-                            setMessage("已删除");
+                            setMessage(`机器人 ${robot.sn} 已删除`);
                             router.refresh();
                           } catch (error) {
                             setMessage(error instanceof Error ? error.message : "删除失败");

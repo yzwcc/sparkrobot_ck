@@ -1,14 +1,20 @@
 ﻿import { BarList } from "@/components/BarList";
 import { RecordTable } from "@/components/RecordTable";
 import { RobotTable } from "@/components/RobotTable";
+import { WarehouseAdminPanel } from "@/components/WarehouseForm";
+import { getSessionUser } from "@/lib/auth";
 import { getWarehouseByCode, getWarehouseDetail } from "@/lib/store";
 import { ORDER_STATUSES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function WarehouseDetailPage({ params }: { params: Promise<{ code: string }>; }) {
+export default async function WarehouseDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const warehouse = await getWarehouseByCode(code);
+  const [warehouse, currentUser] = await Promise.all([
+    getWarehouseByCode(code),
+    getSessionUser()
+  ]);
+
   if (!warehouse) {
     return (
       <main className="section">
@@ -16,11 +22,13 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
       </main>
     );
   }
+
   const detail = await getWarehouseDetail(warehouse.id);
   const statusBreakdown = ORDER_STATUSES.map((label) => ({
     label,
     value: detail.robots.filter((robot) => robot.status === label).length
   }));
+  const isAdmin = currentUser?.role.name === "ADMIN";
 
   return (
     <main>
@@ -49,22 +57,36 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
             <div>
               <h2 className="section-title" style={{ fontSize: 20 }}>仓库概况</h2>
             </div>
+            <div className="tag">{isAdmin ? "可管理" : "只读"}</div>
           </div>
           <div className="list">
             <div className="row small"><span>机器人总数</span><strong>{detail.robots.length}</strong></div>
             <div className="row small"><span>最近记录</span><strong>{detail.recentRecords.length}</strong></div>
+            <div className="row small"><span>最后更新时间</span><strong>{new Date(detail.warehouse.updatedAt).toLocaleString("zh-CN")}</strong></div>
           </div>
         </div>
       </section>
+
+      {isAdmin ? (
+        <section className="section">
+          <WarehouseAdminPanel
+            code={detail.warehouse.code}
+            name={detail.warehouse.name}
+            location={detail.warehouse.location}
+            robotCount={detail.robots.length}
+          />
+        </section>
+      ) : null}
 
       <section className="section">
         <div className="section-head">
           <div>
             <h2 className="section-title">机器人列表</h2>
+            <p className="section-subtitle">系统管理员可以直接在这里删除机器人。</p>
           </div>
         </div>
         <div className="panel list-card">
-          <RobotTable robots={detail.robots} />
+          <RobotTable robots={detail.robots} canManage={isAdmin} />
         </div>
       </section>
 
