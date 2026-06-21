@@ -99,6 +99,7 @@ model StockRecord {
   warehouseId  String?
   warehouse    Warehouse?   @relation(fields: [warehouseId], references: [id])
   operatorName String
+  snPhotoUrl   String?
   statusBefore OrderStatus?
   statusAfter  OrderStatus?
   note         String       @default("")

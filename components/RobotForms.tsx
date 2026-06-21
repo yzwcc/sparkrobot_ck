@@ -51,6 +51,15 @@ function storeValue(key: string, value: string) {
   }
 }
 
+async function fileToDataUrl(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("图片读取失败"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -149,12 +158,18 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
           try {
             const robotId = String(form.get("robotId") ?? "");
             const warehouseId = String(form.get("warehouseId") ?? "");
+            const photo = form.get("snPhoto");
+            if (!(photo instanceof File) || photo.size === 0) {
+              throw new Error("请上传 SN 照片");
+            }
+            const snPhotoUrl = await fileToDataUrl(photo);
             await submitJson("/api/stock-records", {
               action: "IN",
               robotId,
               warehouseId,
               operatorName: String(form.get("operatorName") ?? ""),
-              note: String(form.get("note") ?? "")
+              note: String(form.get("note") ?? ""),
+              snPhotoUrl
             });
             storeValue("sparkrobot.quick.in.robotId", robotId);
             storeValue("sparkrobot.quick.in.warehouseId", warehouseId);
@@ -201,6 +216,10 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
           <label>备注</label>
           <input name="note" placeholder="可选" />
         </div>
+        <div className="field" style={{ gridColumn: "1 / -1" }}>
+          <label>SN 照片</label>
+          <input name="snPhoto" type="file" accept="image/*" capture="environment" required />
+        </div>
       </div>
       <div className="spacer" />
       <div className="actions">
@@ -238,11 +257,17 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
         startTransition(async () => {
           try {
             const robotId = String(form.get("robotId") ?? "");
+            const photo = form.get("snPhoto");
+            if (!(photo instanceof File) || photo.size === 0) {
+              throw new Error("请上传 SN 照片");
+            }
+            const snPhotoUrl = await fileToDataUrl(photo);
             await submitJson("/api/stock-records", {
               action: "OUT",
               robotId,
               operatorName: String(form.get("operatorName") ?? ""),
-              note: String(form.get("note") ?? "")
+              note: String(form.get("note") ?? ""),
+              snPhotoUrl
             });
             storeValue("sparkrobot.quick.out.robotId", robotId);
             setMessage("出库成功");
@@ -280,6 +305,10 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
         <div className="field" style={{ gridColumn: "1 / -1" }}>
           <label>备注</label>
           <input name="note" placeholder="可选" />
+        </div>
+        <div className="field" style={{ gridColumn: "1 / -1" }}>
+          <label>SN 照片</label>
+          <input name="snPhoto" type="file" accept="image/*" capture="environment" required />
         </div>
       </div>
       <div className="spacer" />

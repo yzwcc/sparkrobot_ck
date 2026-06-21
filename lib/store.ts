@@ -251,6 +251,7 @@ async function readFromDatabase(): Promise<AppData> {
       warehouseId: record.warehouseId,
       warehouseName: record.warehouse?.name ?? null,
       operatorName: record.operatorName,
+      snPhotoUrl: record.snPhotoUrl,
       statusBefore: record.statusBefore ? mapStatusFromCode(record.statusBefore) : null,
       statusAfter: record.statusAfter ? mapStatusFromCode(record.statusAfter) : null,
       origin: mapOriginFromCode(record.origin),
@@ -294,6 +295,7 @@ async function createAuditRecord(params: {
   warehouseId: string | null;
   operatorName: string;
   operatorId?: string | null;
+  snPhotoUrl?: string | null;
   statusBefore: OrderStatus | null;
   statusAfter: OrderStatus | null;
   note?: string;
@@ -302,13 +304,14 @@ async function createAuditRecord(params: {
     data: {
       action: params.action,
       origin: params.origin,
-      robotId: params.robotId,
-      warehouseId: params.warehouseId,
-      operatorName: normalizeText(params.operatorName) || "未填写",
-      statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
-      statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
-      note: normalizeText(params.note),
-      occurredAt: new Date(),
+        robotId: params.robotId,
+        warehouseId: params.warehouseId,
+        operatorName: normalizeText(params.operatorName) || "未填写",
+        snPhotoUrl: params.snPhotoUrl ?? null,
+        statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
+        statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
+        note: normalizeText(params.note),
+        occurredAt: new Date(),
       userId: params.operatorId ?? null
     }
   });
@@ -447,7 +450,8 @@ export async function checkInRobot(
   warehouseId: string,
   operatorName: string,
   note = "",
-  operatorId?: string | null
+  operatorId?: string | null,
+  snPhotoUrl?: string | null
 ) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
   if (!robot) throw new Error("机器人不存在");
@@ -467,6 +471,7 @@ export async function checkInRobot(
     warehouseId,
     operatorName,
     operatorId,
+    snPhotoUrl,
     statusBefore: null,
     statusAfter: mapStatusFromCode(next.status),
     note
@@ -489,7 +494,8 @@ export async function checkOutRobot(
   robotId: string,
   operatorName: string,
   note = "",
-  operatorId?: string | null
+  operatorId?: string | null,
+  snPhotoUrl?: string | null
 ) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId }, include: { warehouse: true } });
   if (!robot) throw new Error("机器人不存在");
@@ -508,6 +514,7 @@ export async function checkOutRobot(
     warehouseId: robot.warehouseId,
     operatorName,
     operatorId,
+    snPhotoUrl,
     statusBefore: previousStatus,
     statusAfter: previousStatus,
     note

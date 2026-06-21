@@ -23,24 +23,28 @@ export async function POST(request: Request) {
   try {
     const user = await requireManager();
     const body = await request.json();
-    const { action, robotId, warehouseId, operatorName, note } = body as {
+    const { action, robotId, warehouseId, operatorName, note, snPhotoUrl } = body as {
       action?: "IN" | "OUT";
       robotId?: string;
       warehouseId?: string;
       operatorName?: string;
       note?: string;
+      snPhotoUrl?: string;
     };
     if (!action || !robotId || !operatorName) {
       throw new Error("action、robotId 和 operatorName 为必填项");
+    }
+    if (!snPhotoUrl) {
+      throw new Error("请上传 SN 照片");
     }
     if (action === "IN") {
       if (!warehouseId) {
         throw new Error("入库需要 warehouseId");
       }
-      const robot = await checkInRobot(robotId, warehouseId, operatorName, note ?? "", user.id);
+      const robot = await checkInRobot(robotId, warehouseId, operatorName, note ?? "", user.id, snPhotoUrl);
       return Response.json({ data: robot }, { status: 201 });
     }
-    const robot = await checkOutRobot(robotId, operatorName, note ?? "", user.id);
+    const robot = await checkOutRobot(robotId, operatorName, note ?? "", user.id, snPhotoUrl);
     return Response.json({ data: robot }, { status: 201 });
   } catch (error) {
     return Response.json(

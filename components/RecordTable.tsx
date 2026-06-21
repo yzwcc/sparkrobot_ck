@@ -32,6 +32,7 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
             <th>仓库</th>
             <th>状态</th>
             <th>操作人</th>
+            <th>SN 照片</th>
             <th>时间</th>
             <th>备注</th>
           </tr>
@@ -51,6 +52,15 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
                 <div className="muted small">→ {record.statusAfter ?? "-"}</div>
               </td>
               <td>{record.operatorName}</td>
+              <td>
+                {record.snPhotoUrl ? (
+                  <a href={record.snPhotoUrl} target="_blank" rel="noreferrer" className="record-photo-link">
+                    <img src={record.snPhotoUrl} alt="SN 照片" className="record-photo-thumb" />
+                  </a>
+                ) : (
+                  "-"
+                )}
+              </td>
               <td>{new Date(record.occurredAt).toLocaleString("zh-CN")}</td>
               <td>{record.note || "-"}</td>
             </tr>

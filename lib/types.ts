@@ -71,6 +71,7 @@ export interface StockRecord {
   warehouseId: string | null;
   warehouseName: string | null;
   operatorName: string;
+  snPhotoUrl?: string | null;
   statusBefore: OrderStatus | null;
   statusAfter: OrderStatus | null;
   origin?: StockOrigin | null;

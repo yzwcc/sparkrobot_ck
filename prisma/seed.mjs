@@ -94,6 +94,7 @@ async function main() {
         robotId: created.id,
         warehouseId: created.warehouseId,
         operatorName: "seed",
+        snPhotoUrl: null,
         statusAfter: created.status,
         note: "Seed data",
         occurredAt: new Date()
