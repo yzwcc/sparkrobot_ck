@@ -110,8 +110,8 @@ export function LoginPanel({ currentUser }: { currentUser: { displayName: string
         </div>
       </div>
       <div className="form-grid">
-        <div className="field"><label>用户名</label><input name="username" defaultValue="zhangyan" required /></div>
-        <div className="field"><label>密码</label><input name="password" type="password" defaultValue="sparkrobot" required /></div>
+        <div className="field"><label>用户名</label><input name="username" defaultValue="" placeholder="请输入用户名" required /></div>
+        <div className="field"><label>密码</label><input name="password" type="password" defaultValue="" placeholder="请输入密码" required /></div>
       </div>
       <div className="field login-remember">
         <label className="checkbox-row">
