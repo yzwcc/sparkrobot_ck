@@ -1,4 +1,7 @@
-﻿import { ActionPill } from "@/components/StatusPill";
+﻿"use client";
+
+import { useState } from "react";
+import { ActionPill } from "@/components/StatusPill";
 import { StockRecord } from "@/lib/types";
 
 function originLabel(origin?: string | null) {
@@ -17,6 +20,8 @@ function originLabel(origin?: string | null) {
 }
 
 export function RecordTable({ records }: { records: StockRecord[] }) {
+  const [preview, setPreview] = useState<string | null>(null);
+
   if (!records.length) {
     return <div className="empty">没有符合条件的记录。</div>;
   }
@@ -54,9 +59,9 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
               <td>{record.operatorName}</td>
               <td>
                 {record.snPhotoUrl ? (
-                  <a href={record.snPhotoUrl} target="_blank" rel="noreferrer" className="record-photo-link">
+                  <button type="button" className="record-photo-link" onClick={() => setPreview(record.snPhotoUrl ?? null)}>
                     <img src={record.snPhotoUrl} alt="SN 照片" className="record-photo-thumb" />
-                  </a>
+                  </button>
                 ) : (
                   "-"
                 )}
@@ -67,6 +72,16 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
           ))}
         </tbody>
       </table>
+      {preview ? (
+        <div className="photo-preview-backdrop" onClick={() => setPreview(null)} role="presentation">
+          <div className="photo-preview-panel" onClick={(event) => event.stopPropagation()}>
+            <img src={preview} alt="SN 预览" className="photo-preview-image" />
+            <button type="button" className="button-secondary" onClick={() => setPreview(null)}>
+              关闭预览
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

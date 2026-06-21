@@ -32,8 +32,8 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
       <section className="section">
         <div className="section-head">
           <div>
-            <h1 className="section-title">出入库与状态记录</h1>
-            <p className="section-subtitle">按动作、仓库、状态和时间筛选历史操作。</p>
+            <h1 className="section-title">记录中心</h1>
+            <p className="section-subtitle">按动作、仓库、状态和时间筛选，照片可直接点开预览。</p>
           </div>
         </div>
         <form className="panel form-card" action="/records" method="get">
