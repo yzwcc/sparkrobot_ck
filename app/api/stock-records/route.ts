@@ -22,21 +22,28 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireManager();
-    const body = await request.json();
-    const { action, robotId, warehouseId, operatorName, note, snPhotoUrl } = body as {
-      action?: "IN" | "OUT";
-      robotId?: string;
-      warehouseId?: string;
-      operatorName?: string;
-      note?: string;
-      snPhotoUrl?: string;
+    const contentType = request.headers.get("content-type") ?? "";
+    const body =
+      contentType.includes("multipart/form-data")
+        ? await request.formData()
+        : await request.json();
+    const getValue = (key: string) => {
+      if (body instanceof FormData) return body.get(key);
+      return (body as Record<string, unknown>)[key];
     };
+    const action = String(getValue("action") ?? "");
+    const robotId = String(getValue("robotId") ?? "");
+    const warehouseId = String(getValue("warehouseId") ?? "");
+    const operatorName = String(getValue("operatorName") ?? "");
+    const note = String(getValue("note") ?? "");
+    const snPhoto = getValue("snPhoto");
     if (!action || !robotId || !operatorName) {
       throw new Error("action、robotId 和 operatorName 为必填项");
     }
-    if (!snPhotoUrl) {
+    if (!(snPhoto instanceof File) || snPhoto.size === 0) {
       throw new Error("请上传 SN 照片");
     }
+    const snPhotoUrl = `data:${snPhoto.type || "image/jpeg"};base64,${Buffer.from(await snPhoto.arrayBuffer()).toString("base64")}`;
     if (action === "IN") {
       if (!warehouseId) {
         throw new Error("入库需要 warehouseId");

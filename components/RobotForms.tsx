@@ -37,6 +37,18 @@ async function submitJson(url: string, body: unknown) {
   return json;
 }
 
+async function submitFormData(url: string, formData: FormData) {
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData
+  });
+  const json = (await response.json().catch(() => null)) as { error?: string } | null;
+  if (!response.ok) {
+    throw new Error(json?.error || "提交失败");
+  }
+  return json;
+}
+
 function readStoredValue(key: string) {
   if (typeof window === "undefined") return "";
   return window.localStorage.getItem(key) ?? "";
@@ -51,18 +63,9 @@ function storeValue(key: string, value: string) {
   }
 }
 
-async function fileToDataUrl(file: File) {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("图片读取失败"));
-    reader.readAsDataURL(file);
-  });
-}
-
 async function compressImage(file: File, maxSize = 1400, quality = 0.82) {
   if (typeof window === "undefined") return file;
-  const sourceUrl = await fileToDataUrl(file);
+  const sourceUrl = URL.createObjectURL(file);
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -85,6 +88,15 @@ async function compressImage(file: File, maxSize = 1400, quality = 0.82) {
   return new File([blob], file.name.replace(/\.(png|jpg|jpeg|webp|heic|avif)$/i, ".jpg"), {
     type: "image/jpeg",
     lastModified: file.lastModified
+  });
+}
+
+async function readPreview(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("图片读取失败"));
+    reader.readAsDataURL(file);
   });
 }
 
@@ -192,15 +204,14 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
               throw new Error("请上传 SN 照片");
             }
             const compressed = await compressImage(photo);
-            const snPhotoUrl = await fileToDataUrl(compressed);
-            await submitJson("/api/stock-records", {
-              action: "IN",
-              robotId,
-              warehouseId,
-              operatorName: String(form.get("operatorName") ?? ""),
-              note: String(form.get("note") ?? ""),
-              snPhotoUrl
-            });
+            const payload = new FormData();
+            payload.set("action", "IN");
+            payload.set("robotId", robotId);
+            payload.set("warehouseId", warehouseId);
+            payload.set("operatorName", String(form.get("operatorName") ?? ""));
+            payload.set("note", String(form.get("note") ?? ""));
+            payload.set("snPhoto", compressed);
+            await submitFormData("/api/stock-records", payload);
             storeValue("sparkrobot.quick.in.robotId", robotId);
             storeValue("sparkrobot.quick.in.warehouseId", warehouseId);
             setMessage("入库成功");
@@ -262,7 +273,7 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
                 return;
               }
               const compressed = await compressImage(file);
-              setPhotoPreview(await fileToDataUrl(compressed));
+              setPhotoPreview(await readPreview(compressed));
             }}
           />
           {photoPreview ? <img src={photoPreview} alt="入库照片预览" className="upload-preview" /> : null}
@@ -310,14 +321,13 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
               throw new Error("请上传 SN 照片");
             }
             const compressed = await compressImage(photo);
-            const snPhotoUrl = await fileToDataUrl(compressed);
-            await submitJson("/api/stock-records", {
-              action: "OUT",
-              robotId,
-              operatorName: String(form.get("operatorName") ?? ""),
-              note: String(form.get("note") ?? ""),
-              snPhotoUrl
-            });
+            const payload = new FormData();
+            payload.set("action", "OUT");
+            payload.set("robotId", robotId);
+            payload.set("operatorName", String(form.get("operatorName") ?? ""));
+            payload.set("note", String(form.get("note") ?? ""));
+            payload.set("snPhoto", compressed);
+            await submitFormData("/api/stock-records", payload);
             storeValue("sparkrobot.quick.out.robotId", robotId);
             setMessage("出库成功");
             event.currentTarget.reset();
@@ -371,7 +381,7 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
                 return;
               }
               const compressed = await compressImage(file);
-              setPhotoPreview(await fileToDataUrl(compressed));
+              setPhotoPreview(await readPreview(compressed));
             }}
           />
           {photoPreview ? <img src={photoPreview} alt="出库照片预览" className="upload-preview" /> : null}
