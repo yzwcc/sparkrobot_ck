@@ -20,6 +20,7 @@ export function LoginPanel({ currentUser }: { currentUser: { displayName: string
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [showRegister, setShowRegister] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   if (currentUser) {
@@ -92,7 +93,8 @@ export function LoginPanel({ currentUser }: { currentUser: { displayName: string
         try {
           await submitJson("/api/auth/login", {
             username: String(form.get("username") ?? ""),
-            password: String(form.get("password") ?? "")
+            password: String(form.get("password") ?? ""),
+            rememberMe
           });
           setMessage("登录成功");
           router.refresh();
@@ -108,8 +110,18 @@ export function LoginPanel({ currentUser }: { currentUser: { displayName: string
         </div>
       </div>
       <div className="form-grid">
-        <div className="field"><label>用户名</label><input name="username" defaultValue="admin" required /></div>
-        <div className="field"><label>密码</label><input name="password" type="password" defaultValue="admin123" required /></div>
+        <div className="field"><label>用户名</label><input name="username" defaultValue="zhangyan" required /></div>
+        <div className="field"><label>密码</label><input name="password" type="password" defaultValue="sparkrobot" required /></div>
+      </div>
+      <div className="field login-remember">
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(event) => setRememberMe(event.target.checked)}
+          />
+          <span>自动登录</span>
+        </label>
       </div>
       <div className="spacer" />
       <div className="actions">

@@ -103,9 +103,9 @@ async function main() {
   }
 
   await prisma.user.upsert({
-    where: { username: "admin" },
+    where: { username: "zhangyan" },
     update: {},
-    create: { username: "admin", displayName: "系统管理员", password: "admin123", roleId: adminRole.id }
+    create: { username: "zhangyan", displayName: "系统管理员", password: "sparkrobot", roleId: adminRole.id }
   });
 
   await prisma.user.upsert({

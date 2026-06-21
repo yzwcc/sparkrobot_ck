@@ -35,5 +35,5 @@ This is a Next.js + TypeScript warehouse management app for robots.
 
 ## Defaults
 
-- Default admin username: `admin`
-- Default admin password: `admin123`
+- Default admin username: `zhangyan`
+- Default admin password: `sparkrobot`

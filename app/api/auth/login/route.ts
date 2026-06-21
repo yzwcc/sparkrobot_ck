@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const username = String(body.username ?? "").trim();
     const password = String(body.password ?? "").trim();
+    const rememberMe = body.rememberMe === true || body.rememberMe === "true";
     if (!username || !password) {
       throw new Error("用户名和密码不能为空");
     }
@@ -23,7 +24,8 @@ export async function POST(request: Request) {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production",
+      maxAge: rememberMe ? 60 * 60 * 24 * 30 : undefined
     });
 
     return Response.json({
