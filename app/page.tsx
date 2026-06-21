@@ -40,8 +40,8 @@ export default async function HomePage() {
 
         <div className="panel hero-main hero-overlay hero-hero-card">
           <div className="eyebrow">SparkRobot Control Center</div>
-          <h1>让机器人作为背景，管理信息浮在前景</h1>
-          <p>只保留机器人主体与氛围，其他产品文案不再参与页面内容。前景聚焦仓库管理、库存操作和审计。</p>
+          <h1>机器人作为背景，管理信息轻轻浮起</h1>
+          <p>减少前景厚重感，把焦点交给机器人轮廓与光影。仓库管理内容保持可读，但不抢画面。</p>
           <div className="spacer" />
           <div className="actions">
             <a className="button-primary" href="#quick-actions" style={{ display: "inline-flex", alignItems: "center" }}>快速出入库</a>
@@ -55,8 +55,8 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="hero-side-stack">
-          <div className="panel hero-side-visual hero-stats-card">
+        <div className="hero-side-stack hero-side-tight">
+          <div className="panel hero-side-visual hero-stats-card hero-glass-card">
             <div className="mini-title">今日概览</div>
             <div className="mini-grid">
               <div><div className="mini-label">机器人总数</div><div className="mini-value">{summary.totalRobots}</div></div>
@@ -99,7 +99,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="stats-grid">
+      <section className="stats-grid stats-grid-soft">
         <MetricCard label="机器人总数" value={summary.totalRobots} hint="可追踪" />
         <MetricCard label="空闲" value={summary.idleCount} tone="good" />
         <MetricCard label="在租" value={summary.rentedCount} tone="warn" />
@@ -107,7 +107,7 @@ export default async function HomePage() {
       </section>
 
       <section className="grid-2">
-        <div className="panel chart-card">
+        <div className="panel chart-card soft-panel">
           <div className="section-head">
             <div>
               <h2 className="section-title">机器人类型分布</h2>
@@ -116,7 +116,7 @@ export default async function HomePage() {
           </div>
           <BarList items={summary.byType} />
         </div>
-        <div className="panel chart-card">
+        <div className="panel chart-card soft-panel">
           <div className="section-head">
             <div>
               <h2 className="section-title">订单状态分布</h2>
@@ -145,7 +145,7 @@ export default async function HomePage() {
 
       {canManageUsers ? (
         <section className="section">
-          <div className="panel form-card">
+          <div className="panel form-card soft-panel">
             <div className="tag">用户管理</div>
             <h3 style={{ margin: "12px 0 6px" }}>管理员可升级或撤销二级管理员</h3>
             <p className="muted" style={{ margin: 0 }}>
@@ -184,7 +184,7 @@ export default async function HomePage() {
             <p className="section-subtitle">按时间倒序显示关键操作。</p>
           </div>
         </div>
-        <div className="panel list-card">
+        <div className="panel list-card soft-panel">
           <RecordTable records={summary.recentRecords} />
         </div>
       </section>
