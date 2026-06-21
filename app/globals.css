@@ -57,9 +57,9 @@ body::before {
 .hero-bg-vignette { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(6,16,29,0.10), rgba(6,16,29,0.16) 38%, rgba(6,16,29,0.74) 72%, rgba(6,16,29,0.92)); }
 .hero-bg-spotlight { position: absolute; inset: auto 10% 8% 10%; height: 30%; background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.30), rgba(120, 170, 255, 0.06) 25%, transparent 65%); filter: blur(24px); }
 .bg-robot { object-fit: contain; opacity: 0.34; filter: saturate(1.04) contrast(1.08) brightness(1.06) blur(0.15px); }
-.bg-left { object-position: left top; transform: scale(0.88); clip-path: inset(0 60% 44% 0); }
-.bg-center { object-position: right top; opacity: 0.28; transform: scale(0.86); clip-path: inset(0 0 48% 58%); }
-.bg-right { object-position: left bottom; transform: scale(0.88); clip-path: inset(50% 58% 0 0); }
+.bg-left { object-position: left top; transform: scale(0.84); clip-path: inset(0 68% 48% 0); }
+.bg-center { object-position: right top; opacity: 0.26; transform: scale(0.82); clip-path: inset(0 0 54% 62%); }
+.bg-right { object-position: left bottom; transform: scale(0.84); clip-path: inset(56% 64% 0 0); }
 .hero-overlay { position: relative; z-index: 2; backdrop-filter: blur(14px); background: linear-gradient(180deg, rgba(10, 18, 34, 0.34), rgba(10, 18, 34, 0.58)); border-color: rgba(255,255,255,0.08); }
 .hero-hero-card { max-width: 600px; }
 .hero-main { padding: 28px; position: relative; overflow: hidden; min-height: 360px; }
