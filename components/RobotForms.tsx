@@ -60,6 +60,34 @@ async function fileToDataUrl(file: File) {
   });
 }
 
+async function compressImage(file: File, maxSize = 1400, quality = 0.82) {
+  if (typeof window === "undefined") return file;
+  const sourceUrl = await fileToDataUrl(file);
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("图片加载失败"));
+    img.src = sourceUrl;
+  });
+
+  const ratio = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const width = Math.round(image.width * ratio);
+  const height = Math.round(image.height * ratio);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) return file;
+  context.drawImage(image, 0, 0, width, height);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob) return file;
+  return new File([blob], file.name.replace(/\.(png|jpg|jpeg|webp|heic|avif)$/i, ".jpg"), {
+    type: "image/jpeg",
+    lastModified: file.lastModified
+  });
+}
+
 export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -136,6 +164,7 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
   const [query, setQuery] = useState("");
   const [defaultRobotId, setDefaultRobotId] = useState("");
   const [defaultWarehouseId, setDefaultWarehouseId] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
 
   useEffect(() => {
     setDefaultRobotId(readStoredValue("sparkrobot.quick.in.robotId"));
@@ -162,7 +191,8 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
             if (!(photo instanceof File) || photo.size === 0) {
               throw new Error("请上传 SN 照片");
             }
-            const snPhotoUrl = await fileToDataUrl(photo);
+            const compressed = await compressImage(photo);
+            const snPhotoUrl = await fileToDataUrl(compressed);
             await submitJson("/api/stock-records", {
               action: "IN",
               robotId,
@@ -176,6 +206,7 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
             setMessage("入库成功");
             event.currentTarget.reset();
             setQuery("");
+            setPhotoPreview("");
             router.refresh();
           } catch (error) {
             setMessage(error instanceof Error ? error.message : "提交失败");
@@ -218,7 +249,23 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
         </div>
         <div className="field" style={{ gridColumn: "1 / -1" }}>
           <label>SN 照片</label>
-          <input name="snPhoto" type="file" accept="image/*" capture="environment" required />
+          <input
+            name="snPhoto"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            required
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) {
+                setPhotoPreview("");
+                return;
+              }
+              const compressed = await compressImage(file);
+              setPhotoPreview(await fileToDataUrl(compressed));
+            }}
+          />
+          {photoPreview ? <img src={photoPreview} alt="入库照片预览" className="upload-preview" /> : null}
         </div>
       </div>
       <div className="spacer" />
@@ -237,6 +284,7 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
   const busyRobots = useMemo(() => robots.filter((robot) => robot.warehouseId !== null), [robots]);
   const [query, setQuery] = useState("");
   const [defaultRobotId, setDefaultRobotId] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
 
   useEffect(() => {
     setDefaultRobotId(readStoredValue("sparkrobot.quick.out.robotId"));
@@ -261,7 +309,8 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
             if (!(photo instanceof File) || photo.size === 0) {
               throw new Error("请上传 SN 照片");
             }
-            const snPhotoUrl = await fileToDataUrl(photo);
+            const compressed = await compressImage(photo);
+            const snPhotoUrl = await fileToDataUrl(compressed);
             await submitJson("/api/stock-records", {
               action: "OUT",
               robotId,
@@ -273,6 +322,7 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
             setMessage("出库成功");
             event.currentTarget.reset();
             setQuery("");
+            setPhotoPreview("");
             router.refresh();
           } catch (error) {
             setMessage(error instanceof Error ? error.message : "提交失败");
@@ -308,7 +358,23 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
         </div>
         <div className="field" style={{ gridColumn: "1 / -1" }}>
           <label>SN 照片</label>
-          <input name="snPhoto" type="file" accept="image/*" capture="environment" required />
+          <input
+            name="snPhoto"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            required
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) {
+                setPhotoPreview("");
+                return;
+              }
+              const compressed = await compressImage(file);
+              setPhotoPreview(await fileToDataUrl(compressed));
+            }}
+          />
+          {photoPreview ? <img src={photoPreview} alt="出库照片预览" className="upload-preview" /> : null}
         </div>
       </div>
       <div className="spacer" />
