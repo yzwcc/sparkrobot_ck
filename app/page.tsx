@@ -7,14 +7,7 @@ import { WarehouseSummaryCard } from "@/components/WarehouseSummaryCard";
 import { getSessionUser } from "@/lib/auth";
 import { getDashboardSummary, getRobotOptions, getWarehouses } from "@/lib/store";
 import Image from "next/image";
-
 export const dynamic = "force-dynamic";
-
-const featuredProducts = [
-  { id: "a3", title: "远征A3", image: "/robot-bgs/a3-bg.png", accent: "A3" },
-  { id: "x2", title: "灵犀X2", image: "/robot-bgs/x2-bg.png", accent: "X2" },
-  { id: "a2", title: "远征A2", image: "/robot-bgs/a2-bg.png", accent: "A2" }
-] as const;
 
 export default async function HomePage() {
   const [summary, currentUser, robotOptions, warehouses] = await Promise.all([
@@ -72,30 +65,6 @@ export default async function HomePage() {
             </div>
           </div>
           <LoginPanel currentUser={currentUser ? { displayName: currentUser.displayName, role: currentUser.role.name } : null} />
-        </div>
-      </section>
-
-      <section id="products" className="section">
-        <div className="section-head">
-          <div>
-            <h2 className="section-title">机器人背景展示</h2>
-            <p className="section-subtitle">只保留机器人本体与轮廓氛围。</p>
-          </div>
-          <div className="tag">背景素材区</div>
-        </div>
-        <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <article key={product.id} className="panel bg-card bg-card-large">
-              <div className="bg-card-image-wrap">
-                <Image src={product.image} alt={product.title} fill className="bg-card-image" />
-                <div className="bg-card-mask" />
-              </div>
-              <div className="bg-card-caption">
-                <div className="product-kicker">{product.accent}</div>
-                <h3>{product.title}</h3>
-              </div>
-            </article>
-          ))}
         </div>
       </section>
 
