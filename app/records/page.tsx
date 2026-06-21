@@ -37,13 +37,13 @@ export default async function RecordsPage({
         <div className="section-head">
           <div>
             <h1 className="section-title">出入库与状态记录</h1>
-            <p className="section-subtitle">按动作、仓库、状态和时间筛选历史。</p>
+            <p className="section-subtitle">按动作、仓库、状态和时间筛选历史操作。</p>
           </div>
         </div>
         <form className="panel form-card" action="/records" method="get">
           <div className="form-grid">
             <div className="field">
-              <label>搜索关键字</label>
+              <label>搜索关键词</label>
               <input name="search" defaultValue={filters.search} placeholder="SN、仓库、操作人" />
             </div>
             <div className="field">

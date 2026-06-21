@@ -16,10 +16,12 @@ export const ORDER_STATUSES = [
 ] as const;
 
 export const STOCK_ACTIONS = ["IN", "OUT", "STATUS"] as const;
+export const STOCK_ORIGINS = ["ROBOT_CREATE", "STOCK_IN", "STOCK_OUT", "STATUS_CHANGE"] as const;
 
 export type RobotType = (typeof ROBOT_TYPES)[number];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type StockAction = (typeof STOCK_ACTIONS)[number];
+export type StockOrigin = (typeof STOCK_ORIGINS)[number];
 
 export interface Warehouse {
   id: string;
@@ -53,6 +55,7 @@ export interface StockRecord {
   operatorName: string;
   statusBefore: OrderStatus | null;
   statusAfter: OrderStatus | null;
+  origin?: StockOrigin | null;
   note: string;
   occurredAt: string;
   createdAt: string;

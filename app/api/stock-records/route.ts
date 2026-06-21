@@ -1,5 +1,5 @@
 import { checkInRobot, checkOutRobot, getRecords } from "@/lib/store";
-import { requireAdmin } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { ORDER_STATUSES, STOCK_ACTIONS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const user = await requireManager();
     const body = await request.json();
     const { action, robotId, warehouseId, operatorName, note } = body as {
       action?: "IN" | "OUT";
@@ -37,10 +37,10 @@ export async function POST(request: Request) {
       if (!warehouseId) {
         throw new Error("入库需要 warehouseId");
       }
-      const robot = await checkInRobot(robotId, warehouseId, operatorName, note ?? "");
+      const robot = await checkInRobot(robotId, warehouseId, operatorName, note ?? "", user.id);
       return Response.json({ data: robot }, { status: 201 });
     }
-    const robot = await checkOutRobot(robotId, operatorName, note ?? "");
+    const robot = await checkOutRobot(robotId, operatorName, note ?? "", user.id);
     return Response.json({ data: robot }, { status: 201 });
   } catch (error) {
     return Response.json(

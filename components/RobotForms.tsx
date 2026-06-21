@@ -70,12 +70,12 @@ export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[
           <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
             新建机器人
           </h3>
-          <p className="section-subtitle">管理员操作：为每台机器人登记 SN、类型和初始仓库。</p>
+          <p className="section-subtitle">管理者操作：为每台机器人登记 SN、类型和初始仓库。</p>
         </div>
       </div>
       <div className="form-grid">
         <div className="field">
-          <label>SN码</label>
+          <label>SN 码</label>
           <input name="sn" placeholder="例如 A3-2024-0008" required />
         </div>
         <div className="field">
@@ -150,7 +150,7 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
           <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
             入库登记
           </h3>
-          <p className="section-subtitle">管理员操作：只能选择当前未在库的机器人。</p>
+          <p className="section-subtitle">管理者和二级管理员可将未入库机器人登记到指定仓库。</p>
         </div>
       </div>
       <div className="form-grid">
@@ -230,7 +230,7 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
           <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
             出库登记
           </h3>
-          <p className="section-subtitle">管理员操作：出库后机器人将离开当前仓库。</p>
+          <p className="section-subtitle">机器人离开当前仓库时，操作也会写入审计记录。</p>
         </div>
       </div>
       <div className="form-grid">
@@ -298,7 +298,7 @@ export function StatusUpdateForm({ robots }: { robots: RobotOption[] }) {
           <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
             状态变更
           </h3>
-          <p className="section-subtitle">管理员操作：支持空闲、日租、月租、销售、维修、损坏、缺少配件。</p>
+          <p className="section-subtitle">支持空闲、日租、月租、销售、维修、损坏、缺少配件。</p>
         </div>
       </div>
       <div className="form-grid">
@@ -377,7 +377,7 @@ export function RobotEditForm({ robots, warehouses }: { robots: EditableRobotOpt
           <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
             编辑机器人
           </h3>
-          <p className="section-subtitle">管理员操作：修改 SN、类型、状态和仓库。</p>
+          <p className="section-subtitle">管理者可修改 SN、类型、状态和仓库。</p>
         </div>
       </div>
       <div className="form-grid">
@@ -393,13 +393,13 @@ export function RobotEditForm({ robots, warehouses }: { robots: EditableRobotOpt
           </select>
         </div>
         <div className="field">
-          <label>SN码</label>
-          <input name="sn" placeholder="保持原值可不改" />
+          <label>SN 码</label>
+          <input name="sn" placeholder="保留原值可不改" />
         </div>
         <div className="field">
           <label>机器人类型</label>
           <select name="type" defaultValue="">
-            <option value="">保持原值</option>
+            <option value="">保留原值</option>
             {ROBOT_TYPES.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -410,7 +410,7 @@ export function RobotEditForm({ robots, warehouses }: { robots: EditableRobotOpt
         <div className="field">
           <label>状态</label>
           <select name="status" defaultValue="">
-            <option value="">保持原值</option>
+            <option value="">保留原值</option>
             {ORDER_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {status}
@@ -421,7 +421,7 @@ export function RobotEditForm({ robots, warehouses }: { robots: EditableRobotOpt
         <div className="field">
           <label>仓库</label>
           <select name="warehouseId" defaultValue="">
-            <option value="">保持原值</option>
+            <option value="">保留原值</option>
             <option value="none">清空仓库</option>
             {warehouses.map((warehouse) => (
               <option key={warehouse.id} value={warehouse.id}>
@@ -452,7 +452,7 @@ export function RobotDeleteHint() {
       <div className="tag">维护建议</div>
       <h3 style={{ margin: "12px 0 6px" }}>删除机器人请使用列表操作</h3>
       <p className="muted" style={{ margin: 0 }}>
-        管理员可以在机器人列表里对单条机器人执行删除操作，避免误删。
+        管理员可以在机器人列表中对单条机器人执行删除，避免误删。
       </p>
     </div>
   );

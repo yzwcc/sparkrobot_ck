@@ -17,4 +17,3 @@ export function ActionPill({ action }: { action: StockAction }) {
   const tone = action === "IN" ? "good" : action === "OUT" ? "warn" : "danger";
   return <span className={`pill ${tone}`}>{label}</span>;
 }
-

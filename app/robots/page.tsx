@@ -12,7 +12,9 @@ export default async function RobotsPage() {
     getRobotOptions(),
     getSessionUser()
   ]);
-  const isAdmin = currentUser?.role.name === "ADMIN";
+  const role = currentUser?.role.name ?? "GUEST";
+  const canManageStock = role === "ADMIN" || role === "MANAGER";
+  const canManageRobots = role === "ADMIN" || role === "MANAGER";
 
   return (
     <main>
@@ -20,35 +22,35 @@ export default async function RobotsPage() {
         <div className="section-head">
           <div>
             <h1 className="section-title">机器人管理</h1>
-            <p className="section-subtitle">登记 SN、维护类型、执行入库出库和状态变更。</p>
+            <p className="section-subtitle">登记 SN、维护类型，并执行入库出库和状态变更。</p>
           </div>
-          <div className="tag">{isAdmin ? "管理员模式" : "只读模式"}</div>
+          <div className="tag">{canManageRobots ? "可管理" : "只读模式"}</div>
         </div>
-        {isAdmin ? (
+        {canManageRobots ? (
           <div className="grid-3">
             <RobotCreationForm warehouses={warehouses} />
             <StatusUpdateForm robots={robotOptions} />
             <div className="panel form-card">
               <div className="tag">管理提示</div>
-              <h3 style={{ margin: "12px 0 6px" }}>建议流程</h3>
+              <h3 style={{ margin: "12px 0 6px" }}>推荐流程</h3>
               <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>
-                先新增机器人，再做入库登记；如果机器人从仓库离开，使用出库；状态变化单独记录，方便追踪维修、销售和租赁过程。
+                先新建机器人，再做入库登记；如需离开仓库，使用出库；状态变更会单独记录，便于追踪维修、销售和租赁过程。
               </p>
             </div>
           </div>
         ) : (
           <div className="panel form-card">
             <div className="tag">只读模式</div>
-            <h3 style={{ margin: "12px 0 6px" }}>当前账号没有写权限</h3>
+            <h3 style={{ margin: "12px 0 6px" }}>当前账号仅可查看</h3>
             <p className="muted" style={{ margin: 0 }}>
-              普通用户可以查看机器人列表、仓库归属和状态，入库、出库、状态变更需要管理员登录。
+              普通用户可查看机器人列表、仓库归属和状态，入库、出库和状态修改需要管理员或二级管理员登录。
             </p>
           </div>
         )}
       </section>
 
       <section className="section">
-        {isAdmin ? (
+        {canManageStock ? (
           <div className="grid-2">
             <CheckInForm robots={robotOptions} warehouses={warehouses} />
             <CheckOutForm robots={robotOptions} />
@@ -64,7 +66,7 @@ export default async function RobotsPage() {
           </div>
         </div>
         <div className="panel list-card">
-          <RobotTable robots={robots} canManage={isAdmin} />
+          <RobotTable robots={robots} canManage={role === "ADMIN"} />
         </div>
       </section>
     </main>

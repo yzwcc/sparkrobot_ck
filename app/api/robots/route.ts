@@ -1,5 +1,5 @@
 import { createRobot, getRobots } from "@/lib/store";
-import { requireAdmin } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +10,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const user = await requireManager();
     const body = await request.json();
-    const robot = await createRobot(body);
+    const robot = await createRobot(body, { id: user.id, name: user.displayName });
     return Response.json({ data: robot }, { status: 201 });
   } catch (error) {
     return Response.json(

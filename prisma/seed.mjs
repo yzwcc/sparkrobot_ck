@@ -34,7 +34,13 @@ async function main() {
     create: { name: "ADMIN" }
   });
 
-  await prisma.role.upsert({
+  const managerRole = await prisma.role.upsert({
+    where: { name: "MANAGER" },
+    update: {},
+    create: { name: "MANAGER" }
+  });
+
+  const userRole = await prisma.role.upsert({
     where: { name: "USER" },
     update: {},
     create: { name: "USER" }
@@ -82,8 +88,11 @@ async function main() {
       }
     });
 
-    await prisma.stockRecord.create({
-      data: {
+    await prisma.stockRecord.upsert({
+      where: { id: `${created.id}-seed-in` },
+      update: {},
+      create: {
+        id: `${created.id}-seed-in`,
         action: "IN",
         robotId: created.id,
         warehouseId: created.warehouseId,
@@ -105,6 +114,28 @@ async function main() {
       roleId: adminRole.id
     }
   });
+
+  await prisma.user.upsert({
+    where: { username: "manager" },
+    update: {},
+    create: {
+      username: "manager",
+      displayName: "二级管理员",
+      password: "manager123",
+      roleId: managerRole.id
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { username: "viewer" },
+    update: {},
+    create: {
+      username: "viewer",
+      displayName: "普通用户",
+      password: "viewer123",
+      roleId: userRole.id
+    }
+  });
 }
 
 main()
@@ -116,4 +147,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-

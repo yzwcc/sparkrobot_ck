@@ -1,5 +1,5 @@
 import { createWarehouse, getWarehouses } from "@/lib/store";
-import { requireAdmin } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    await requireManager();
     const body = await request.json();
     const warehouse = await createWarehouse(body);
     return Response.json({ data: warehouse }, { status: 201 });

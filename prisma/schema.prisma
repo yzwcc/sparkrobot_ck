@@ -30,8 +30,16 @@ enum StockAction {
   STATUS
 }
 
+enum StockOrigin {
+  ROBOT_CREATE
+  STOCK_IN
+  STOCK_OUT
+  STATUS_CHANGE
+}
+
 enum RoleName {
   ADMIN
+  MANAGER
   USER
 }
 
@@ -80,6 +88,7 @@ model Robot {
 model StockRecord {
   id           String      @id @default(cuid())
   action       StockAction
+  origin       StockOrigin?
   robotId      String
   robot        Robot       @relation(fields: [robotId], references: [id])
   warehouseId  String?
@@ -96,4 +105,3 @@ model StockRecord {
   @@index([warehouseId, occurredAt])
   @@index([robotId, occurredAt])
 }
-

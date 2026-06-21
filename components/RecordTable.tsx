@@ -1,6 +1,21 @@
 import { ActionPill } from "@/components/StatusPill";
 import { StockRecord } from "@/lib/types";
 
+function originLabel(origin?: string | null) {
+  switch (origin) {
+    case "ROBOT_CREATE":
+      return "新建机器人";
+    case "STOCK_IN":
+      return "入库";
+    case "STOCK_OUT":
+      return "出库";
+    case "STATUS_CHANGE":
+      return "状态变更";
+    default:
+      return "-";
+  }
+}
+
 export function RecordTable({ records }: { records: StockRecord[] }) {
   if (!records.length) {
     return <div className="empty">没有符合条件的记录</div>;
@@ -12,6 +27,7 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
         <thead>
           <tr>
             <th>动作</th>
+            <th>来源</th>
             <th>机器人</th>
             <th>仓库</th>
             <th>状态</th>
@@ -26,6 +42,7 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
               <td>
                 <ActionPill action={record.action} />
               </td>
+              <td>{originLabel(record.origin)}</td>
               <td>
                 <div>{record.robotSn}</div>
                 <div className="muted small">{record.robotType}</div>
@@ -45,4 +62,3 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
     </div>
   );
 }
-

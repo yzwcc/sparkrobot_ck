@@ -1,12 +1,12 @@
 import { changeRobotStatus } from "@/lib/store";
-import { requireAdmin } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { ORDER_STATUSES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const user = await requireManager();
     const body = await request.json();
     const { robotId, status, operatorName, note } = body as {
       robotId?: string;
@@ -20,7 +20,13 @@ export async function POST(request: Request) {
     if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
       throw new Error("无效的订单状态");
     }
-    const robot = await changeRobotStatus(robotId, status as (typeof ORDER_STATUSES)[number], operatorName, note ?? "");
+    const robot = await changeRobotStatus(
+      robotId,
+      status as (typeof ORDER_STATUSES)[number],
+      operatorName,
+      note ?? "",
+      user.id
+    );
     return Response.json({ data: robot });
   } catch (error) {
     return Response.json(

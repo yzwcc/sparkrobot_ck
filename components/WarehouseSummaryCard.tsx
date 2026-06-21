@@ -35,7 +35,7 @@ export function WarehouseSummaryCard({ code, name, location, total, statusBreakd
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div className="stat-label">近记录</div>
+          <div className="stat-label">最近记录</div>
           <div className="stat-value" style={{ fontSize: 24 }}>
             {recentCount}
           </div>

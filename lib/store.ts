@@ -10,18 +10,14 @@ import {
   RobotInput,
   RobotType,
   StockAction,
+  StockOrigin,
   StockRecord,
   Warehouse,
   WarehouseInput
 } from "@/lib/types";
-import { Prisma } from "@prisma/client";
 import type { $Enums } from "@prisma/client";
 
 const DEFAULT_STATUS: OrderStatus = "空闲";
-
-function nowIso() {
-  return new Date().toISOString();
-}
 
 function normalizeSn(sn: string) {
   return sn.trim().toUpperCase();
@@ -113,24 +109,24 @@ function mapActionFromCode(action: $Enums.StockAction): StockAction {
   return action;
 }
 
+function mapOriginFromCode(origin: $Enums.StockOrigin | null): StockOrigin | null {
+  return origin ?? null;
+}
+
 function toIso(value: Date | string) {
   return new Date(value).toISOString();
 }
 
 function attachWarehouseName(robot: Robot, warehouseName: string | null) {
-  return {
-    ...robot,
-    warehouseName
-  };
+  return { ...robot, warehouseName };
 }
 
 async function ensureSeeded() {
   const roleCount = await prisma.role.count();
-  if (roleCount > 0) {
-    return;
-  }
+  if (roleCount > 0) return;
 
   const adminRole = await prisma.role.create({ data: { name: "ADMIN" } });
+  await prisma.role.create({ data: { name: "MANAGER" } });
   await prisma.role.create({ data: { name: "USER" } });
 
   const warehouseA = await prisma.warehouse.create({
@@ -165,9 +161,11 @@ async function ensureSeeded() {
     await prisma.stockRecord.create({
       data: {
         action: "IN",
+        origin: "ROBOT_CREATE",
         robotId: robot.id,
         warehouseId: robot.warehouseId,
-        operatorName: "系统初始化",
+        operatorName: "seed",
+        statusBefore: null,
         statusAfter: robot.status,
         note: "Seed data",
         occurredAt: new Date(robot.createdAt)
@@ -227,6 +225,7 @@ async function readFromDatabase(): Promise<AppData> {
       operatorName: record.operatorName,
       statusBefore: record.statusBefore ? mapStatusFromCode(record.statusBefore) : null,
       statusAfter: record.statusAfter ? mapStatusFromCode(record.statusAfter) : null,
+      origin: mapOriginFromCode(record.origin),
       note: record.note,
       occurredAt: toIso(record.occurredAt),
       createdAt: toIso(record.createdAt)
@@ -235,17 +234,13 @@ async function readFromDatabase(): Promise<AppData> {
 }
 
 async function applyFallbackSnapshot(): Promise<AppData> {
-  const data = await readFromDatabase();
-  return data;
+  return readFromDatabase();
 }
 
 function filterRecords(records: StockRecord[], filters: RecordFilter) {
   return records.filter((record) => {
     const actionOk = !filters.action || filters.action === "ALL" || record.action === filters.action;
-    const warehouseOk =
-      !filters.warehouseId ||
-      filters.warehouseId === "ALL" ||
-      record.warehouseId === filters.warehouseId;
+    const warehouseOk = !filters.warehouseId || filters.warehouseId === "ALL" || record.warehouseId === filters.warehouseId;
     const statusOk =
       !filters.status ||
       filters.status === "ALL" ||
@@ -261,6 +256,33 @@ function filterRecords(records: StockRecord[], filters: RecordFilter) {
     const fromOk = !filters.from || record.occurredAt >= `${filters.from}T00:00:00.000Z`;
     const toOk = !filters.to || record.occurredAt <= `${filters.to}T23:59:59.999Z`;
     return actionOk && warehouseOk && statusOk && searchOk && fromOk && toOk;
+  });
+}
+
+async function createAuditRecord(params: {
+  action: StockAction;
+  origin: StockOrigin;
+  robotId: string;
+  warehouseId: string | null;
+  operatorName: string;
+  operatorId?: string | null;
+  statusBefore: OrderStatus | null;
+  statusAfter: OrderStatus | null;
+  note?: string;
+}) {
+  await prisma.stockRecord.create({
+    data: {
+      action: params.action,
+      origin: params.origin,
+      robotId: params.robotId,
+      warehouseId: params.warehouseId,
+      operatorName: normalizeText(params.operatorName) || "未填写",
+      statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
+      statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
+      note: normalizeText(params.note),
+      occurredAt: new Date(),
+      userId: params.operatorId ?? null
+    }
   });
 }
 
@@ -282,9 +304,7 @@ export async function getRecords(filters: RecordFilter = {}) {
 export async function getWarehouseDetail(warehouseId: string) {
   const data = await applyFallbackSnapshot();
   const warehouse = data.warehouses.find((item) => item.id === warehouseId);
-  if (!warehouse) {
-    throw new Error("仓库不存在");
-  }
+  if (!warehouse) throw new Error("仓库不存在");
   const robots = data.robots.filter((robot) => robot.warehouseId === warehouseId);
   const recentRecords = data.records.filter((record) => record.warehouseId === warehouseId).slice(0, 10);
   return { warehouse, robots, recentRecords };
@@ -297,9 +317,7 @@ export async function getWarehouseByCode(code: string) {
 
 export async function createWarehouse(input: WarehouseInput) {
   const code = normalizeText(input.code).toUpperCase();
-  if (!code) {
-    throw new Error("仓库编码不能为空");
-  }
+  if (!code) throw new Error("仓库编码不能为空");
   await prisma.warehouse.create({
     data: {
       code,
@@ -310,13 +328,14 @@ export async function createWarehouse(input: WarehouseInput) {
   return { ok: true };
 }
 
-export async function createRobot(input: RobotInput) {
+export async function createRobot(
+  input: RobotInput,
+  operator?: { id?: string | null; name?: string | null } | string
+) {
   const sn = normalizeSn(input.sn);
   const type = assertRobotType(input.type);
   const status = input.status ? assertStatus(input.status) : DEFAULT_STATUS;
-  if (!sn) {
-    throw new Error("SN码不能为空");
-  }
+  if (!sn) throw new Error("SN 不能为空");
 
   const robot = await prisma.robot.create({
     data: {
@@ -327,6 +346,21 @@ export async function createRobot(input: RobotInput) {
       warehouseId: input.warehouseId ?? null
     },
     include: { warehouse: true }
+  });
+
+  const operatorName = typeof operator === "string" ? operator : operator?.name ?? "系统";
+  const operatorId = typeof operator === "string" ? null : operator?.id ?? null;
+
+  await createAuditRecord({
+    action: "IN",
+    origin: "ROBOT_CREATE",
+    robotId: robot.id,
+    warehouseId: robot.warehouseId,
+    operatorName,
+    operatorId,
+    statusBefore: null,
+    statusAfter: mapStatusFromCode(robot.status),
+    note: `创建机器人：${robot.sn}`
   });
 
   return attachWarehouseName(
@@ -344,11 +378,12 @@ export async function createRobot(input: RobotInput) {
   );
 }
 
-export async function updateRobot(robotId: string, input: Partial<RobotInput & { note: string; warehouseId: string | null }>) {
+export async function updateRobot(
+  robotId: string,
+  input: Partial<RobotInput & { note: string; warehouseId: string | null }>
+) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
-  if (!robot) {
-    throw new Error("机器人不存在");
-  }
+  if (!robot) throw new Error("机器人不存在");
 
   const next = await prisma.robot.update({
     where: { id: robotId },
@@ -379,54 +414,36 @@ export async function deleteRobot(robotId: string) {
   await prisma.robot.delete({ where: { id: robotId } });
 }
 
-async function createStockRecord(params: {
-  action: StockAction;
-  robotId: string;
-  warehouseId: string | null;
-  operatorName: string;
-  statusBefore: OrderStatus | null;
-  statusAfter: OrderStatus | null;
-  note?: string;
-}) {
-  await prisma.stockRecord.create({
-    data: {
-      action: params.action,
-      robotId: params.robotId,
-      warehouseId: params.warehouseId,
-      operatorName: normalizeText(params.operatorName) || "未填写",
-      statusBefore: params.statusBefore ? mapStatusToCode(params.statusBefore) : null,
-      statusAfter: params.statusAfter ? mapStatusToCode(params.statusAfter) : null,
-      note: normalizeText(params.note),
-      occurredAt: new Date()
-    }
-  });
-}
-
-export async function checkInRobot(robotId: string, warehouseId: string, operatorName: string, note = "") {
+export async function checkInRobot(
+  robotId: string,
+  warehouseId: string,
+  operatorName: string,
+  note = "",
+  operatorId?: string | null
+) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
-  if (!robot) {
-    throw new Error("机器人不存在");
-  }
-  if (robot.warehouseId) {
-    throw new Error("机器人当前已在仓库中，请先出库");
-  }
+  if (!robot) throw new Error("机器人不存在");
+  if (robot.warehouseId) throw new Error("机器人当前已在仓库中，请先出库");
   const warehouse = await prisma.warehouse.findUnique({ where: { id: warehouseId } });
-  if (!warehouse) {
-    throw new Error("目标仓库不存在");
-  }
+  if (!warehouse) throw new Error("目标仓库不存在");
+
   const next = await prisma.robot.update({
     where: { id: robotId },
     data: { warehouseId }
   });
-  await createStockRecord({
+
+  await createAuditRecord({
     action: "IN",
+    origin: "STOCK_IN",
     robotId: next.id,
     warehouseId,
     operatorName,
+    operatorId,
     statusBefore: null,
     statusAfter: mapStatusFromCode(next.status),
     note
   });
+
   return {
     id: next.id,
     sn: next.sn,
@@ -440,28 +457,34 @@ export async function checkInRobot(robotId: string, warehouseId: string, operato
   };
 }
 
-export async function checkOutRobot(robotId: string, operatorName: string, note = "") {
+export async function checkOutRobot(
+  robotId: string,
+  operatorName: string,
+  note = "",
+  operatorId?: string | null
+) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId }, include: { warehouse: true } });
-  if (!robot) {
-    throw new Error("机器人不存在");
-  }
-  if (!robot.warehouseId) {
-    throw new Error("机器人当前不在仓库中，无法出库");
-  }
+  if (!robot) throw new Error("机器人不存在");
+  if (!robot.warehouseId) throw new Error("机器人当前不在仓库中，无法出库");
+
   const previousStatus = mapStatusFromCode(robot.status);
   const next = await prisma.robot.update({
     where: { id: robotId },
     data: { warehouseId: null }
   });
-  await createStockRecord({
+
+  await createAuditRecord({
     action: "OUT",
+    origin: "STOCK_OUT",
     robotId: next.id,
     warehouseId: robot.warehouseId,
     operatorName,
+    operatorId,
     statusBefore: previousStatus,
     statusAfter: previousStatus,
     note
   });
+
   return {
     id: next.id,
     sn: next.sn,
@@ -475,25 +498,33 @@ export async function checkOutRobot(robotId: string, operatorName: string, note 
   };
 }
 
-export async function changeRobotStatus(robotId: string, status: OrderStatus, operatorName: string, note = "") {
+export async function changeRobotStatus(
+  robotId: string,
+  status: OrderStatus,
+  operatorName: string,
+  note = "",
+  operatorId?: string | null
+) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
-  if (!robot) {
-    throw new Error("机器人不存在");
-  }
+  if (!robot) throw new Error("机器人不存在");
   const nextStatus = assertStatus(status);
   const next = await prisma.robot.update({
     where: { id: robotId },
     data: { status: mapStatusToCode(nextStatus) }
   });
-  await createStockRecord({
+
+  await createAuditRecord({
     action: "STATUS",
+    origin: "STATUS_CHANGE",
     robotId: next.id,
     warehouseId: next.warehouseId,
     operatorName,
+    operatorId,
     statusBefore: mapStatusFromCode(robot.status),
     statusAfter: nextStatus,
     note
   });
+
   return {
     id: next.id,
     sn: next.sn,
@@ -509,23 +540,12 @@ export async function changeRobotStatus(robotId: string, status: OrderStatus, op
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const data = await applyFallbackSnapshot();
-  const byType = ROBOT_TYPES.map((label) => ({
-    label,
-    value: data.robots.filter((robot) => robot.type === label).length
-  }));
-  const byStatus = ORDER_STATUSES.map((label) => ({
-    label,
-    value: data.robots.filter((robot) => robot.status === label).length
-  }));
+  const byType = ROBOT_TYPES.map((label) => ({ label, value: data.robots.filter((robot) => robot.type === label).length }));
+  const byStatus = ORDER_STATUSES.map((label) => ({ label, value: data.robots.filter((robot) => robot.status === label).length }));
   const warehouseCards = data.warehouses.map((warehouse) => {
     const robots = data.robots.filter((robot) => robot.warehouseId === warehouse.id);
-    const statusBreakdown = ORDER_STATUSES.map((label) => ({
-      label,
-      value: robots.filter((robot) => robot.status === label).length
-    }));
-    const recentRecords = data.records
-      .filter((record) => record.warehouseId === warehouse.id)
-      .slice(0, 5);
+    const statusBreakdown = ORDER_STATUSES.map((label) => ({ label, value: robots.filter((robot) => robot.status === label).length }));
+    const recentRecords = data.records.filter((record) => record.warehouseId === warehouse.id).slice(0, 5);
     return {
       id: warehouse.id,
       code: warehouse.code,
@@ -538,9 +558,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   });
   const recentRecords = data.records.slice(0, 10);
   const idleCount = byStatus.find((entry) => entry.label === "空闲")?.value ?? 0;
-  const rentedCount =
-    (byStatus.find((entry) => entry.label === "日租")?.value ?? 0) +
-    (byStatus.find((entry) => entry.label === "月租")?.value ?? 0);
+  const rentedCount = (byStatus.find((entry) => entry.label === "日租")?.value ?? 0) + (byStatus.find((entry) => entry.label === "月租")?.value ?? 0);
   const saleCount = byStatus.find((entry) => entry.label === "销售")?.value ?? 0;
   const repairCount = byStatus.find((entry) => entry.label === "维修")?.value ?? 0;
   const damagedCount = byStatus.find((entry) => entry.label === "损坏")?.value ?? 0;

@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "仓库机器人管理系统",
-  description: "用于管理机器人出入库、仓库归属和订单状态的可视化系统"
+  title: "SparkRobot 仓库管理系统",
+  description: "用于管理机器人出入库、仓库归属和订单状态的可视化系统。"
 };
 
 const navItems = [
   { href: "/", label: "总览" },
   { href: "/robots", label: "机器人" },
   { href: "/warehouses", label: "仓库" },
-  { href: "/records", label: "记录" }
+  { href: "/records", label: "记录" },
+  { href: "/users", label: "用户" }
 ] as const;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -21,9 +23,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="shell">
           <header className="topbar">
             <Link className="brand" href="/">
-              <span className="brand-mark">R</span>
+              <Image
+                src="/brand.svg"
+                alt="SparkRobot"
+                width={136}
+                height={52}
+                className="brand-image"
+                priority
+              />
               <span>
-                <div>仓库机器人管理系统</div>
+                <div>SparkRobot 仓库管理系统</div>
                 <div className="muted small">Robot warehouse visual control</div>
               </span>
             </Link>
