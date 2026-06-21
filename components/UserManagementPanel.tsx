@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export function UserManagementPanel({ users }: { users: UserItem[] }) {
       <div className="section-head">
         <div>
           <h2 className="section-title">用户管理</h2>
-          <p className="section-subtitle">普通用户可注册，管理员可将其升级或撤销为二级管理员。</p>
+          <p className="section-subtitle">普通用户可注册；管理员可将其升级或撤销为二级管理员。</p>
         </div>
         <div className="tag">仅管理员</div>
       </div>

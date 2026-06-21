@@ -10,6 +10,18 @@ export const ROBOT_TYPES = [
   "D1 max"
 ] as const;
 
+export const ROBOT_TYPE_CODES = [
+  "YUANZHENG_A3",
+  "YUANZHENG_A2_FLAGSHIP",
+  "YUANZHENG_A2_YOUTH",
+  "LINGXI_X2_FLAGSHIP",
+  "LINGXI_X2_YOUTH",
+  "D1_ULTRA",
+  "D1_EDU",
+  "D1_PRO",
+  "D1_MAX"
+] as const;
+
 export const ORDER_STATUSES = [
   "空闲",
   "日租",
@@ -24,6 +36,7 @@ export const STOCK_ACTIONS = ["IN", "OUT", "STATUS"] as const;
 export const STOCK_ORIGINS = ["ROBOT_CREATE", "STOCK_IN", "STOCK_OUT", "STATUS_CHANGE"] as const;
 
 export type RobotType = (typeof ROBOT_TYPES)[number];
+export type RobotTypeCode = (typeof ROBOT_TYPE_CODES)[number];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type StockAction = (typeof STOCK_ACTIONS)[number];
 export type StockOrigin = (typeof STOCK_ORIGINS)[number];

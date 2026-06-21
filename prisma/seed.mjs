@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -33,23 +33,9 @@ function mapStatus(label) {
 }
 
 async function main() {
-  const adminRole = await prisma.role.upsert({
-    where: { name: "ADMIN" },
-    update: {},
-    create: { name: "ADMIN" }
-  });
-
-  const managerRole = await prisma.role.upsert({
-    where: { name: "MANAGER" },
-    update: {},
-    create: { name: "MANAGER" }
-  });
-
-  const userRole = await prisma.role.upsert({
-    where: { name: "USER" },
-    update: {},
-    create: { name: "USER" }
-  });
+  const adminRole = await prisma.role.upsert({ where: { name: "ADMIN" }, update: {}, create: { name: "ADMIN" } });
+  const managerRole = await prisma.role.upsert({ where: { name: "MANAGER" }, update: {}, create: { name: "MANAGER" } });
+  const userRole = await prisma.role.upsert({ where: { name: "USER" }, update: {}, create: { name: "USER" } });
 
   const warehouseA = await prisma.warehouse.upsert({
     where: { code: "WH-A" },
@@ -118,43 +104,26 @@ async function main() {
   await prisma.user.upsert({
     where: { username: "admin" },
     update: {},
-    create: {
-      username: "admin",
-      displayName: "系统管理员",
-      password: "admin123",
-      roleId: adminRole.id
-    }
+    create: { username: "admin", displayName: "系统管理员", password: "admin123", roleId: adminRole.id }
   });
 
   await prisma.user.upsert({
     where: { username: "manager" },
     update: {},
-    create: {
-      username: "manager",
-      displayName: "二级管理员",
-      password: "manager123",
-      roleId: managerRole.id
-    }
+    create: { username: "manager", displayName: "二级管理员", password: "manager123", roleId: managerRole.id }
   });
 
   await prisma.user.upsert({
     where: { username: "viewer" },
     update: {},
-    create: {
-      username: "viewer",
-      displayName: "普通用户",
-      password: "viewer123",
-      roleId: userRole.id
-    }
+    create: { username: "viewer", displayName: "普通用户", password: "viewer123", roleId: userRole.id }
   });
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main().then(async () => {
+  await prisma.$disconnect();
+}).catch(async (error) => {
+  console.error(error);
+  await prisma.$disconnect();
+  process.exit(1);
+});

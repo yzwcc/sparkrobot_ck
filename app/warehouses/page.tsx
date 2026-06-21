@@ -1,4 +1,4 @@
-import { BarList } from "@/components/BarList";
+﻿import { BarList } from "@/components/BarList";
 import { WarehouseForm } from "@/components/WarehouseForm";
 import { getSessionUser } from "@/lib/auth";
 import { getDashboardSummary, getWarehouses } from "@/lib/store";
@@ -19,7 +19,7 @@ export default async function WarehousesPage() {
         <div className="section-head">
           <div>
             <h1 className="section-title">仓库管理</h1>
-            <p className="section-subtitle">查看各仓库库存分布、快速新增仓库。</p>
+            <p className="section-subtitle">查看各仓库库存分布，并快速新增仓库。</p>
           </div>
           <div className="tag">{isAdmin ? "可编辑" : "只读"}</div>
         </div>
@@ -38,9 +38,7 @@ export default async function WarehousesPage() {
           <div className="panel chart-card">
             <div className="section-head">
               <div>
-                <h2 className="section-title" style={{ fontSize: 20 }}>
-                  全局状态分布
-                </h2>
+                <h2 className="section-title" style={{ fontSize: 20 }}>全局状态分布</h2>
                 <p className="section-subtitle">所有仓库机器人状态总览。</p>
               </div>
             </div>
@@ -53,7 +51,7 @@ export default async function WarehousesPage() {
         <div className="section-head">
           <div>
             <h2 className="section-title">仓库列表</h2>
-            <p className="section-subtitle">按仓库查看基本信息。</p>
+            <p className="section-subtitle">按仓库查看基础信息。</p>
           </div>
         </div>
         <div className="grid-3">

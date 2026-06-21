@@ -1,4 +1,4 @@
-import { OrderStatus, StockAction } from "@/lib/types";
+﻿import { OrderStatus, StockAction } from "@/lib/types";
 
 export function StatusPill({ status }: { status: OrderStatus }) {
   const tone =

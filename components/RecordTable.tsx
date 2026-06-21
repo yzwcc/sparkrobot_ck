@@ -1,4 +1,4 @@
-import { ActionPill } from "@/components/StatusPill";
+﻿import { ActionPill } from "@/components/StatusPill";
 import { StockRecord } from "@/lib/types";
 
 function originLabel(origin?: string | null) {
@@ -18,7 +18,7 @@ function originLabel(origin?: string | null) {
 
 export function RecordTable({ records }: { records: StockRecord[] }) {
   if (!records.length) {
-    return <div className="empty">没有符合条件的记录</div>;
+    return <div className="empty">没有符合条件的记录。</div>;
   }
 
   return (
@@ -39,9 +39,7 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
         <tbody>
           {records.map((record) => (
             <tr key={record.id}>
-              <td>
-                <ActionPill action={record.action} />
-              </td>
+              <td><ActionPill action={record.action} /></td>
               <td>{originLabel(record.origin)}</td>
               <td>
                 <div>{record.robotSn}</div>
@@ -49,8 +47,8 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
               </td>
               <td>{record.warehouseName ?? "未入库"}</td>
               <td>
-                <div>{record.statusBefore ?? "无"}</div>
-                <div className="muted small">→ {record.statusAfter ?? "无"}</div>
+                <div>{record.statusBefore ?? "-"}</div>
+                <div className="muted small">→ {record.statusAfter ?? "-"}</div>
               </td>
               <td>{record.operatorName}</td>
               <td>{new Date(record.occurredAt).toLocaleString("zh-CN")}</td>

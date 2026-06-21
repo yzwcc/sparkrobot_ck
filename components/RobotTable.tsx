@@ -1,4 +1,4 @@
- "use client";
+﻿"use client";
 
 import { StatusPill } from "@/components/StatusPill";
 import { Robot } from "@/lib/types";
@@ -30,7 +30,7 @@ export function RobotTable({
   const [isPending, startTransition] = useTransition();
 
   if (!robots.length) {
-    return <div className="empty">当前没有机器人数据</div>;
+    return <div className="empty">当前没有机器人数据。</div>;
   }
 
   return (
@@ -53,9 +53,7 @@ export function RobotTable({
               <td>{robot.sn}</td>
               <td>{robot.type}</td>
               <td>{robot.warehouseName ?? "未入库"}</td>
-              <td>
-                <StatusPill status={robot.status} />
-              </td>
+              <td><StatusPill status={robot.status} /></td>
               <td>{robot.note || "-"}</td>
               <td>{new Date(robot.updatedAt).toLocaleString("zh-CN")}</td>
               {canManage ? (
@@ -65,10 +63,8 @@ export function RobotTable({
                       className="button-secondary"
                       disabled={isPending}
                       onClick={() => {
-                        const nextSn = prompt("请输入新的SN码", robot.sn);
-                        if (nextSn === null) {
-                          return;
-                        }
+                        const nextSn = prompt("请输入新的 SN 码", robot.sn);
+                        if (nextSn === null) return;
                         startTransition(async () => {
                           try {
                             await submitJson(`/api/robots/${robot.id}`, "PATCH", { sn: nextSn });
@@ -80,15 +76,13 @@ export function RobotTable({
                         });
                       }}
                     >
-                      编辑SN
+                      编辑 SN
                     </button>
                     <button
                       className="button-secondary"
                       disabled={isPending}
                       onClick={() => {
-                        if (!confirm(`确定删除机器人 ${robot.sn} 吗？`)) {
-                          return;
-                        }
+                        if (!confirm(`确定删除机器人 ${robot.sn} 吗？`)) return;
                         startTransition(async () => {
                           try {
                             await submitJson(`/api/robots/${robot.id}`, "DELETE");

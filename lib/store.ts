@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import {
   AppData,
   DashboardSummary,
@@ -9,6 +9,8 @@ import {
   Robot,
   RobotInput,
   RobotType,
+  RobotTypeCode,
+  STOCK_ACTIONS,
   StockAction,
   StockOrigin,
   StockRecord,
@@ -41,7 +43,7 @@ function assertStatus(status: string): OrderStatus {
   return status as OrderStatus;
 }
 
-function mapRobotTypeToCode(type: RobotType): $Enums.RobotTypeCode {
+function mapRobotTypeToCode(type: RobotType): RobotTypeCode {
   switch (type) {
     case "远征A3":
       return "YUANZHENG_A3";
@@ -64,10 +66,11 @@ function mapRobotTypeToCode(type: RobotType): $Enums.RobotTypeCode {
   }
 }
 
-function mapRobotTypeFromCode(type: $Enums.RobotTypeCode): RobotType {
+function mapRobotTypeFromCode(type: $Enums.RobotTypeCode | "YUANZHENG_A2"): RobotType {
   switch (type) {
     case "YUANZHENG_A3":
       return "远征A3";
+    case "YUANZHENG_A2":
     case "YUANZHENG_A2_FLAGSHIP":
       return "远征A2旗舰款";
     case "YUANZHENG_A2_YOUTH":
@@ -342,7 +345,7 @@ export async function getWarehouseByCode(code: string) {
 
 export async function createWarehouse(input: WarehouseInput) {
   const code = normalizeText(input.code).toUpperCase();
-  if (!code) throw new Error("仓库编码不能为空");
+  if (!code) throw new Error("仓库编号不能为空");
   await prisma.warehouse.create({
     data: {
       code,
@@ -532,10 +535,13 @@ export async function changeRobotStatus(
 ) {
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
   if (!robot) throw new Error("机器人不存在");
+
+  const previousStatus = mapStatusFromCode(robot.status);
   const nextStatus = assertStatus(status);
   const next = await prisma.robot.update({
     where: { id: robotId },
-    data: { status: mapStatusToCode(nextStatus) }
+    data: { status: mapStatusToCode(nextStatus) },
+    include: { warehouse: true }
   });
 
   await createAuditRecord({
@@ -545,7 +551,7 @@ export async function changeRobotStatus(
     warehouseId: next.warehouseId,
     operatorName,
     operatorId,
-    statusBefore: mapStatusFromCode(robot.status),
+    statusBefore: previousStatus,
     statusAfter: nextStatus,
     note
   });
@@ -554,22 +560,36 @@ export async function changeRobotStatus(
     id: next.id,
     sn: next.sn,
     type: mapRobotTypeFromCode(next.type),
-    status: nextStatus,
+    status: mapStatusFromCode(next.status),
     note: next.note,
     warehouseId: next.warehouseId,
-    warehouseName: null,
+    warehouseName: next.warehouse?.name ?? null,
     createdAt: toIso(next.createdAt),
     updatedAt: toIso(next.updatedAt)
   };
 }
 
+export async function getRobotOptions() {
+  return getRobots();
+}
+
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const data = await applyFallbackSnapshot();
-  const byType = ROBOT_TYPES.map((label) => ({ label, value: data.robots.filter((robot) => robot.type === label).length }));
-  const byStatus = ORDER_STATUSES.map((label) => ({ label, value: data.robots.filter((robot) => robot.status === label).length }));
+  const statusCounts = Object.fromEntries(ORDER_STATUSES.map((status) => [status, 0])) as Record<OrderStatus, number>;
+  const typeCounts = Object.fromEntries(ROBOT_TYPES.map((type) => [type, 0])) as Record<RobotType, number>;
+
+  for (const robot of data.robots) {
+    statusCounts[robot.status] += 1;
+    typeCounts[robot.type] += 1;
+  }
+
+  const rentedCount = statusCounts["日租"] + statusCounts["月租"];
   const warehouseCards = data.warehouses.map((warehouse) => {
     const robots = data.robots.filter((robot) => robot.warehouseId === warehouse.id);
-    const statusBreakdown = ORDER_STATUSES.map((label) => ({ label, value: robots.filter((robot) => robot.status === label).length }));
+    const statusBreakdown = ORDER_STATUSES.map((status) => ({
+      label: status,
+      value: robots.filter((robot) => robot.status === status).length
+    }));
     const recentRecords = data.records.filter((record) => record.warehouseId === warehouse.id).slice(0, 5);
     return {
       id: warehouse.id,
@@ -581,31 +601,21 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
       recentRecords
     };
   });
-  const recentRecords = data.records.slice(0, 10);
-  const idleCount = byStatus.find((entry) => entry.label === "空闲")?.value ?? 0;
-  const rentedCount = (byStatus.find((entry) => entry.label === "日租")?.value ?? 0) + (byStatus.find((entry) => entry.label === "月租")?.value ?? 0);
-  const saleCount = byStatus.find((entry) => entry.label === "销售")?.value ?? 0;
-  const repairCount = byStatus.find((entry) => entry.label === "维修")?.value ?? 0;
-  const damagedCount = byStatus.find((entry) => entry.label === "损坏")?.value ?? 0;
-  const accessoryCount = byStatus.find((entry) => entry.label === "缺少配件")?.value ?? 0;
 
   return {
     totalRobots: data.robots.length,
     totalWarehouses: data.warehouses.length,
-    idleCount,
+    idleCount: statusCounts["空闲"],
     rentedCount,
-    saleCount,
-    repairCount,
-    damagedCount,
-    accessoryCount,
-    byType,
-    byStatus,
+    saleCount: statusCounts["销售"],
+    repairCount: statusCounts["维修"],
+    damagedCount: statusCounts["损坏"],
+    accessoryCount: statusCounts["缺少配件"],
+    byType: ROBOT_TYPES.map((type) => ({ label: type, value: typeCounts[type] })),
+    byStatus: ORDER_STATUSES.map((status) => ({ label: status, value: statusCounts[status] })),
     warehouseCards,
-    recentRecords
+    recentRecords: data.records.slice(0, 10)
   };
 }
 
-export async function getRobotOptions() {
-  const data = await applyFallbackSnapshot();
-  return data.robots;
-}
+

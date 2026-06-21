@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
