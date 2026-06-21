@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ORDER_STATUSES, ROBOT_TYPES, OrderStatus, RobotType } from "@/lib/types";
 
@@ -37,6 +37,20 @@ async function submitJson(url: string, body: unknown) {
   return json;
 }
 
+function readStoredValue(key: string) {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(key) ?? "";
+}
+
+function storeValue(key: string, value: string) {
+  if (typeof window === "undefined") return;
+  if (value) {
+    window.localStorage.setItem(key, value);
+  } else {
+    window.localStorage.removeItem(key);
+  }
+}
+
 export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -67,9 +81,7 @@ export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[
     >
       <div className="section-head">
         <div>
-          <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>
-            新建机器人
-          </h3>
+          <h3 className="section-title" style={{ fontSize: 20, margin: 0 }}>新建机器人</h3>
           <p className="section-subtitle">管理员为每台机器人登记 SN、类型和初始仓库。</p>
         </div>
       </div>
@@ -81,9 +93,7 @@ export function RobotCreationForm({ warehouses }: { warehouses: WarehouseOption[
         <div className="field">
           <label>机器人类型</label>
           <select name="type" defaultValue={ROBOT_TYPES[0]}>
-            {ROBOT_TYPES.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
+            {ROBOT_TYPES.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
         </div>
         <div className="field">
@@ -114,6 +124,20 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
   const [isPending, startTransition] = useTransition();
   const availableRobots = useMemo(() => robots.filter((robot) => robot.warehouseId === null), [robots]);
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
+  const [defaultRobotId, setDefaultRobotId] = useState("");
+  const [defaultWarehouseId, setDefaultWarehouseId] = useState("");
+
+  useEffect(() => {
+    setDefaultRobotId(readStoredValue("sparkrobot.quick.in.robotId"));
+    setDefaultWarehouseId(readStoredValue("sparkrobot.quick.in.warehouseId"));
+  }, []);
+
+  const filteredRobots = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return availableRobots;
+    return availableRobots.filter((robot) => [robot.sn, robot.type, robot.warehouseName ?? ""].join(" ").toLowerCase().includes(normalized));
+  }, [availableRobots, query]);
 
   return (
     <form
@@ -123,15 +147,20 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
         const form = new FormData(event.currentTarget);
         startTransition(async () => {
           try {
+            const robotId = String(form.get("robotId") ?? "");
+            const warehouseId = String(form.get("warehouseId") ?? "");
             await submitJson("/api/stock-records", {
               action: "IN",
-              robotId: String(form.get("robotId") ?? ""),
-              warehouseId: String(form.get("warehouseId") ?? ""),
+              robotId,
+              warehouseId,
               operatorName: String(form.get("operatorName") ?? ""),
               note: String(form.get("note") ?? "")
             });
+            storeValue("sparkrobot.quick.in.robotId", robotId);
+            storeValue("sparkrobot.quick.in.warehouseId", warehouseId);
             setMessage("入库成功");
             event.currentTarget.reset();
+            setQuery("");
             router.refresh();
           } catch (error) {
             setMessage(error instanceof Error ? error.message : "提交失败");
@@ -145,17 +174,21 @@ export function CheckInForm({ robots, warehouses }: { robots: RobotOption[]; war
           <p className="section-subtitle">管理员和二级管理员可将未入库机器人登记到指定仓库。</p>
         </div>
       </div>
+      <div className="field">
+        <label>搜索机器人</label>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入 SN、类型或关键词" />
+      </div>
       <div className="form-grid">
         <div className="field">
           <label>机器人</label>
-          <select name="robotId" required>
+          <select name="robotId" required defaultValue={defaultRobotId}>
             <option value="">请选择</option>
-            {availableRobots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.type}</option>)}
+            {filteredRobots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.type}</option>)}
           </select>
         </div>
         <div className="field">
           <label>目标仓库</label>
-          <select name="warehouseId" required>
+          <select name="warehouseId" required defaultValue={defaultWarehouseId}>
             <option value="">请选择</option>
             {warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.code} · {warehouse.name}</option>)}
           </select>
@@ -183,6 +216,18 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const busyRobots = useMemo(() => robots.filter((robot) => robot.warehouseId !== null), [robots]);
+  const [query, setQuery] = useState("");
+  const [defaultRobotId, setDefaultRobotId] = useState("");
+
+  useEffect(() => {
+    setDefaultRobotId(readStoredValue("sparkrobot.quick.out.robotId"));
+  }, []);
+
+  const filteredRobots = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return busyRobots;
+    return busyRobots.filter((robot) => [robot.sn, robot.type, robot.warehouseName ?? ""].join(" ").toLowerCase().includes(normalized));
+  }, [busyRobots, query]);
 
   return (
     <form
@@ -192,14 +237,17 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
         const form = new FormData(event.currentTarget);
         startTransition(async () => {
           try {
+            const robotId = String(form.get("robotId") ?? "");
             await submitJson("/api/stock-records", {
               action: "OUT",
-              robotId: String(form.get("robotId") ?? ""),
+              robotId,
               operatorName: String(form.get("operatorName") ?? ""),
               note: String(form.get("note") ?? "")
             });
+            storeValue("sparkrobot.quick.out.robotId", robotId);
             setMessage("出库成功");
             event.currentTarget.reset();
+            setQuery("");
             router.refresh();
           } catch (error) {
             setMessage(error instanceof Error ? error.message : "提交失败");
@@ -213,12 +261,16 @@ export function CheckOutForm({ robots }: { robots: RobotOption[] }) {
           <p className="section-subtitle">机器人离开当前仓库时，操作也会写入审计记录。</p>
         </div>
       </div>
+      <div className="field">
+        <label>搜索机器人</label>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入 SN、类型或仓库" />
+      </div>
       <div className="form-grid">
         <div className="field">
           <label>机器人</label>
-          <select name="robotId" required>
+          <select name="robotId" required defaultValue={defaultRobotId}>
             <option value="">请选择</option>
-            {busyRobots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.warehouseName ?? "未入库"}</option>)}
+            {filteredRobots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.warehouseName ?? "未入库"}</option>)}
           </select>
         </div>
         <div className="field">
@@ -243,6 +295,18 @@ export function StatusUpdateForm({ robots }: { robots: RobotOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
+  const [defaultRobotId, setDefaultRobotId] = useState("");
+
+  useEffect(() => {
+    setDefaultRobotId(readStoredValue("sparkrobot.quick.status.robotId"));
+  }, []);
+
+  const filteredRobots = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return robots;
+    return robots.filter((robot) => [robot.sn, robot.type, robot.status, robot.warehouseName ?? ""].join(" ").toLowerCase().includes(normalized));
+  }, [query, robots]);
 
   return (
     <form
@@ -252,14 +316,17 @@ export function StatusUpdateForm({ robots }: { robots: RobotOption[] }) {
         const form = new FormData(event.currentTarget);
         startTransition(async () => {
           try {
+            const robotId = String(form.get("robotId") ?? "");
             await submitJson("/api/robots/status", {
-              robotId: String(form.get("robotId") ?? ""),
+              robotId,
               status: String(form.get("status") ?? ""),
               operatorName: String(form.get("operatorName") ?? ""),
               note: String(form.get("note") ?? "")
             });
+            storeValue("sparkrobot.quick.status.robotId", robotId);
             setMessage("状态已更新");
             event.currentTarget.reset();
+            setQuery("");
             router.refresh();
           } catch (error) {
             setMessage(error instanceof Error ? error.message : "提交失败");
@@ -273,12 +340,16 @@ export function StatusUpdateForm({ robots }: { robots: RobotOption[] }) {
           <p className="section-subtitle">支持空闲、日租、月租、销售、维修、损坏、缺少配件。</p>
         </div>
       </div>
+      <div className="field">
+        <label>搜索机器人</label>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入 SN、类型、状态或仓库" />
+      </div>
       <div className="form-grid">
         <div className="field">
           <label>机器人</label>
-          <select name="robotId" required>
+          <select name="robotId" required defaultValue={defaultRobotId}>
             <option value="">请选择</option>
-            {robots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.type}</option>)}
+            {filteredRobots.map((robot) => <option key={robot.id} value={robot.id}>{robot.sn} · {robot.type}</option>)}
           </select>
         </div>
         <div className="field">
