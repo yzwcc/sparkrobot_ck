@@ -45,12 +45,22 @@ function mapRobotTypeToCode(type: RobotType): $Enums.RobotTypeCode {
   switch (type) {
     case "远征A3":
       return "YUANZHENG_A3";
-    case "远征A2":
-      return "YUANZHENG_A2";
+    case "远征A2旗舰款":
+      return "YUANZHENG_A2_FLAGSHIP";
+    case "远征A2青春款":
+      return "YUANZHENG_A2_YOUTH";
     case "灵犀X2旗舰款":
       return "LINGXI_X2_FLAGSHIP";
     case "灵犀X2青春款":
       return "LINGXI_X2_YOUTH";
+    case "D1 ultra":
+      return "D1_ULTRA";
+    case "D1 edu":
+      return "D1_EDU";
+    case "D1 pro":
+      return "D1_PRO";
+    case "D1 max":
+      return "D1_MAX";
   }
 }
 
@@ -58,12 +68,22 @@ function mapRobotTypeFromCode(type: $Enums.RobotTypeCode): RobotType {
   switch (type) {
     case "YUANZHENG_A3":
       return "远征A3";
-    case "YUANZHENG_A2":
-      return "远征A2";
+    case "YUANZHENG_A2_FLAGSHIP":
+      return "远征A2旗舰款";
+    case "YUANZHENG_A2_YOUTH":
+      return "远征A2青春款";
     case "LINGXI_X2_FLAGSHIP":
       return "灵犀X2旗舰款";
     case "LINGXI_X2_YOUTH":
       return "灵犀X2青春款";
+    case "D1_ULTRA":
+      return "D1 ultra";
+    case "D1_EDU":
+      return "D1 edu";
+    case "D1_PRO":
+      return "D1 pro";
+    case "D1_MAX":
+      return "D1 max";
   }
 }
 
@@ -142,9 +162,14 @@ async function ensureSeeded() {
   const seedRobots = [
     { sn: "A3-2024-0001", type: "远征A3" as RobotType, status: "空闲" as OrderStatus, note: "首批样机", warehouseId: warehouseA.id },
     { sn: "A3-2024-0002", type: "远征A3" as RobotType, status: "日租" as OrderStatus, note: "", warehouseId: warehouseA.id },
-    { sn: "A2-2024-0001", type: "远征A2" as RobotType, status: "维修" as OrderStatus, note: "等待轮组配件", warehouseId: warehouseC.id },
-    { sn: "X2F-2024-0001", type: "灵犀X2旗舰款" as RobotType, status: "销售" as OrderStatus, note: "已分配订单", warehouseId: warehouseB.id },
-    { sn: "X2Y-2024-0001", type: "灵犀X2青春款" as RobotType, status: "缺少配件" as OrderStatus, note: "缺少视觉模块", warehouseId: warehouseC.id }
+    { sn: "A2F-2024-0001", type: "远征A2旗舰款" as RobotType, status: "维修" as OrderStatus, note: "等待轮组配件", warehouseId: warehouseC.id },
+    { sn: "A2Y-2024-0001", type: "远征A2青春款" as RobotType, status: "销售" as OrderStatus, note: "已分配订单", warehouseId: warehouseB.id },
+    { sn: "LX2F-2024-0001", type: "灵犀X2旗舰款" as RobotType, status: "缺少配件" as OrderStatus, note: "缺少视觉模块", warehouseId: warehouseC.id },
+    { sn: "LX2Y-2024-0001", type: "灵犀X2青春款" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouseA.id },
+    { sn: "D1U-2024-0001", type: "D1 ultra" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouseA.id },
+    { sn: "D1E-2024-0001", type: "D1 edu" as RobotType, status: "月租" as OrderStatus, note: "", warehouseId: warehouseB.id },
+    { sn: "D1P-2024-0001", type: "D1 pro" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouseC.id },
+    { sn: "D1M-2024-0001", type: "D1 max" as RobotType, status: "维修" as OrderStatus, note: "", warehouseId: warehouseC.id }
   ];
 
   for (const seed of seedRobots) {

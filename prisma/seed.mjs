@@ -4,9 +4,14 @@ const prisma = new PrismaClient();
 
 const robotTypes = [
   { code: "YUANZHENG_A3", label: "远征A3" },
-  { code: "YUANZHENG_A2", label: "远征A2" },
+  { code: "YUANZHENG_A2_FLAGSHIP", label: "远征A2旗舰款" },
+  { code: "YUANZHENG_A2_YOUTH", label: "远征A2青春款" },
   { code: "LINGXI_X2_FLAGSHIP", label: "灵犀X2旗舰款" },
-  { code: "LINGXI_X2_YOUTH", label: "灵犀X2青春款" }
+  { code: "LINGXI_X2_YOUTH", label: "灵犀X2青春款" },
+  { code: "D1_ULTRA", label: "D1 ultra" },
+  { code: "D1_EDU", label: "D1 edu" },
+  { code: "D1_PRO", label: "D1 pro" },
+  { code: "D1_MAX", label: "D1 max" }
 ];
 
 const orderStatuses = [
@@ -65,9 +70,14 @@ async function main() {
   const robots = [
     { sn: "A3-2024-0001", type: "远征A3", status: "空闲", note: "首批样机", warehouseId: warehouseA.id },
     { sn: "A3-2024-0002", type: "远征A3", status: "日租", note: "", warehouseId: warehouseA.id },
-    { sn: "A2-2024-0001", type: "远征A2", status: "维修", note: "等待轮组配件", warehouseId: warehouseC.id },
-    { sn: "X2F-2024-0001", type: "灵犀X2旗舰款", status: "销售", note: "已分配订单", warehouseId: warehouseB.id },
-    { sn: "X2Y-2024-0001", type: "灵犀X2青春款", status: "缺少配件", note: "缺少视觉模块", warehouseId: warehouseC.id }
+    { sn: "A2F-2024-0001", type: "远征A2旗舰款", status: "维修", note: "等待轮组配件", warehouseId: warehouseC.id },
+    { sn: "A2Y-2024-0001", type: "远征A2青春款", status: "销售", note: "已分配订单", warehouseId: warehouseB.id },
+    { sn: "LX2F-2024-0001", type: "灵犀X2旗舰款", status: "缺少配件", note: "缺少视觉模块", warehouseId: warehouseC.id },
+    { sn: "LX2Y-2024-0001", type: "灵犀X2青春款", status: "空闲", note: "", warehouseId: warehouseA.id },
+    { sn: "D1U-2024-0001", type: "D1 ultra", status: "空闲", note: "", warehouseId: warehouseA.id },
+    { sn: "D1E-2024-0001", type: "D1 edu", status: "月租", note: "", warehouseId: warehouseB.id },
+    { sn: "D1P-2024-0001", type: "D1 pro", status: "空闲", note: "", warehouseId: warehouseC.id },
+    { sn: "D1M-2024-0001", type: "D1 max", status: "维修", note: "", warehouseId: warehouseC.id }
   ];
 
   for (const robot of robots) {
@@ -94,6 +104,7 @@ async function main() {
       create: {
         id: `${created.id}-seed-in`,
         action: "IN",
+        origin: "ROBOT_CREATE",
         robotId: created.id,
         warehouseId: created.warehouseId,
         operatorName: "seed",

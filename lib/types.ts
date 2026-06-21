@@ -1,8 +1,13 @@
 export const ROBOT_TYPES = [
   "远征A3",
-  "远征A2",
+  "远征A2旗舰款",
+  "远征A2青春款",
   "灵犀X2旗舰款",
-  "灵犀X2青春款"
+  "灵犀X2青春款",
+  "D1 ultra",
+  "D1 edu",
+  "D1 pro",
+  "D1 max"
 ] as const;
 
 export const ORDER_STATUSES = [
