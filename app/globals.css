@@ -56,10 +56,8 @@ body::before {
 .hero-bg-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: var(--radius); }
 .hero-bg-vignette { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(6,16,29,0.10), rgba(6,16,29,0.16) 38%, rgba(6,16,29,0.74) 72%, rgba(6,16,29,0.92)); }
 .hero-bg-spotlight { position: absolute; inset: auto 10% 8% 10%; height: 30%; background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.30), rgba(120, 170, 255, 0.06) 25%, transparent 65%); filter: blur(24px); }
-.bg-robot { object-fit: contain; opacity: 0.34; filter: saturate(1.04) contrast(1.08) brightness(1.06) blur(0.15px); }
-.bg-left { object-position: left top; transform: scale(0.84); clip-path: inset(0 68% 48% 0); }
-.bg-center { object-position: right top; opacity: 0.26; transform: scale(0.82); clip-path: inset(0 0 54% 62%); }
-.bg-right { object-position: left bottom; transform: scale(0.84); clip-path: inset(56% 64% 0 0); }
+.bg-robot { object-fit: cover; object-position: center; opacity: 0.26; filter: saturate(1.02) contrast(1.06) brightness(1.05); transform: scale(1.06); }
+.bg-single { object-position: center 46%; }
 .hero-overlay { position: relative; z-index: 2; backdrop-filter: blur(14px); background: linear-gradient(180deg, rgba(10, 18, 34, 0.34), rgba(10, 18, 34, 0.58)); border-color: rgba(255,255,255,0.08); }
 .hero-hero-card { max-width: 600px; }
 .hero-main { padding: 28px; position: relative; overflow: hidden; min-height: 360px; }
@@ -139,7 +137,7 @@ button { border: 0; cursor: pointer; border-radius: 14px; padding: 12px 16px; fo
   .topbar { border-radius: 22px; flex-direction: column; align-items: stretch; }
   .hero, .grid-2, .grid-3, .grid-warehouse, .stats-grid, .form-grid { grid-template-columns: 1fr; }
   .hero-background { min-height: 720px; }
-  .bg-robot { opacity: 0.16; }
+  .bg-robot { opacity: 0.14; }
   .bar-item { grid-template-columns: 1fr; }
   .section-head { align-items: start; flex-direction: column; }
 }

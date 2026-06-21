@@ -24,9 +24,7 @@ export default async function HomePage() {
     <main>
       <section className="hero hero-dashboard hero-background hero-cinema">
         <div className="hero-bg-layer">
-          <Image src="/robot-bgs/a3-bg.png" alt="远征A3" fill className="bg-robot bg-left" priority />
-          <Image src="/robot-bgs/x2-bg.png" alt="灵犀X2" fill className="bg-robot bg-center" priority />
-          <Image src="/robot-bgs/a2-bg.png" alt="远征A2" fill className="bg-robot bg-right" priority />
+          <Image src="/home-robot-bg.png" alt="机器人背景" fill className="bg-robot bg-single" priority />
           <div className="hero-bg-vignette" />
           <div className="hero-bg-spotlight" />
         </div>
