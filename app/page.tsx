@@ -6,8 +6,36 @@ import { RecordTable } from "@/components/RecordTable";
 import { WarehouseSummaryCard } from "@/components/WarehouseSummaryCard";
 import { getSessionUser } from "@/lib/auth";
 import { getDashboardSummary, getRobotOptions, getWarehouses } from "@/lib/store";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+
+const featuredProducts = [
+  {
+    id: "a3",
+    title: "远征A3",
+    subtitle: "为舞台而生的硅基明星",
+    image: "/a3-product.png",
+    tone: "dark",
+    desc: "适合展示、讲解、前台接待和复杂场景演示。"
+  },
+  {
+    id: "x2",
+    title: "灵犀X2",
+    subtitle: "有趣、温暖、好奇心爆棚",
+    image: "/x2-product.png",
+    tone: "light",
+    desc: "适合互动体验、校园展陈和面向用户的服务场景。"
+  },
+  {
+    id: "a2",
+    title: "远征A2",
+    subtitle: "交互服务机器人",
+    image: "/a2-product.png",
+    tone: "blue",
+    desc: "适合服务导览、企业接待、展厅讲解与标准化交互任务。"
+  }
+] as const;
 
 export default async function HomePage() {
   const [summary, currentUser, robotOptions, warehouses] = await Promise.all([
@@ -22,16 +50,19 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="hero hero-dashboard">
-        <div className="panel hero-main">
+      <section className="hero hero-dashboard hero-brand">
+        <div className="panel hero-main hero-brand-main">
           <div className="eyebrow">SparkRobot Control Center</div>
-          <h1>更专业的机器人仓库管理平台</h1>
-          <p>用于机器人建档、入库出库、状态追踪、仓库可视化和历史记录审计。</p>
+          <h1>把机器人仓库做成一眼就懂的正式产品站</h1>
+          <p>
+            统一查看机器人类型、仓库归属、订单状态、出入库记录与审计轨迹。
+            通过更清晰的视觉层级，让仓库管理更像一套可以对外展示的产品。
+          </p>
           <div className="spacer" />
           <div className="actions">
-            <a className="button-primary" href="#quick-actions" style={{ display: "inline-flex", alignItems: "center" }}>快速操作</a>
+            <a className="button-primary" href="#products" style={{ display: "inline-flex", alignItems: "center" }}>看产品展示</a>
+            <a className="button-secondary" href="#quick-actions" style={{ display: "inline-flex", alignItems: "center" }}>快速出入库</a>
             <a className="button-secondary" href="/records" style={{ display: "inline-flex", alignItems: "center" }}>查看记录</a>
-            <a className="button-secondary" href="/warehouses" style={{ display: "inline-flex", alignItems: "center" }}>仓库总览</a>
           </div>
           <div className="hero-traits">
             <span className="pill good">实时库存</span>
@@ -39,8 +70,9 @@ export default async function HomePage() {
             <span className="pill">支持注册</span>
           </div>
         </div>
+
         <div className="hero-side-stack">
-          <div className="panel hero-side-visual">
+          <div className="panel hero-side-visual hero-spotlight">
             <div className="mini-title">今日概览</div>
             <div className="mini-grid">
               <div><div className="mini-label">机器人总数</div><div className="mini-value">{summary.totalRobots}</div></div>
@@ -56,6 +88,35 @@ export default async function HomePage() {
             </div>
           </div>
           <LoginPanel currentUser={currentUser ? { displayName: currentUser.displayName, role: currentUser.role.name } : null} />
+        </div>
+      </section>
+
+      <section id="products" className="section">
+        <div className="section-head">
+          <div>
+            <h2 className="section-title">产品视觉展示</h2>
+            <p className="section-subtitle">直接使用你提供的三张产品图，作为首页核心视觉。</p>
+          </div>
+          <div className="tag">品牌展示区</div>
+        </div>
+        <div className="product-grid">
+          {featuredProducts.map((product) => (
+            <article key={product.id} className={`panel product-card tone-${product.tone}`}>
+              <div className="product-copy">
+                <div className="product-title-row">
+                  <div>
+                    <div className="product-kicker">{product.title}</div>
+                    <h3>{product.subtitle}</h3>
+                  </div>
+                  <div className="product-tag">{product.id === "a3" ? "旗舰舞台" : product.id === "x2" ? "人格角色" : "服务交互"}</div>
+                </div>
+                <p>{product.desc}</p>
+              </div>
+              <div className="product-image-wrap">
+                <Image src={product.image} alt={product.title} fill className="product-image" priority={product.id === "a3"} />
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
