@@ -1,4 +1,5 @@
-﻿import { prisma } from "@/lib/prisma";
+﻿import { cache } from "react";
+import { prisma } from "@/lib/prisma";
 import {
   AppData,
   DashboardSummary,
@@ -325,6 +326,10 @@ async function applyFallbackSnapshot(): Promise<AppData> {
   }
 }
 
+const getAppData = cache(async (): Promise<AppData> => {
+  return await applyFallbackSnapshot();
+});
+
 function filterRecords(records: StockRecord[], filters: RecordFilter) {
   return records.filter((record) => {
     const actionOk = !filters.action || filters.action === "ALL" || record.action === filters.action;
@@ -377,22 +382,22 @@ async function createAuditRecord(params: {
 }
 
 export async function getRobots() {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   return data.robots;
 }
 
 export async function getWarehouses() {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   return data.warehouses;
 }
 
 export async function getRecords(filters: RecordFilter = {}) {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   return filterRecords(data.records, filters);
 }
 
 export async function getWarehouseDetail(warehouseId: string) {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   const warehouse = data.warehouses.find((item) => item.id === warehouseId);
   if (!warehouse) throw new Error("仓库不存在");
   const robots = data.robots.filter((robot) => robot.warehouseId === warehouseId);
@@ -401,7 +406,7 @@ export async function getWarehouseDetail(warehouseId: string) {
 }
 
 export async function getWarehouseByCode(code: string) {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   return data.warehouses.find((warehouse) => warehouse.code === code.toUpperCase()) ?? null;
 }
 
@@ -705,7 +710,7 @@ export async function getRobotOptions() {
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const data = await applyFallbackSnapshot();
+  const data = await getAppData();
   const statusCounts = Object.fromEntries(ORDER_STATUSES.map((status) => [status, 0])) as Record<OrderStatus, number>;
   const typeCounts = Object.fromEntries(ROBOT_TYPES.map((type) => [type, 0])) as Record<RobotType, number>;
 
@@ -733,6 +738,11 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     };
   });
 
+  const recentRecords = data.records.slice(0, 10).map((record) => ({
+    ...record,
+    snPhotoUrl: null
+  }));
+
   return {
     totalRobots: data.robots.length,
     totalWarehouses: data.warehouses.length,
@@ -745,6 +755,6 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     byType: ROBOT_TYPES.map((type) => ({ label: type, value: typeCounts[type] })),
     byStatus: ORDER_STATUSES.map((status) => ({ label: status, value: statusCounts[status] })),
     warehouseCards,
-    recentRecords: data.records.slice(0, 10)
+    recentRecords
   };
 }

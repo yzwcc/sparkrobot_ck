@@ -5,7 +5,7 @@ import { QuickActionDrawer } from "@/components/QuickActionDrawer";
 import { RecordTable } from "@/components/RecordTable";
 import { WarehouseSummaryCard } from "@/components/WarehouseSummaryCard";
 import { getSessionUser } from "@/lib/auth";
-import { getDashboardSummary, getRobotOptions, getWarehouses } from "@/lib/store";
+import { getDashboardSummary, getRobots, getWarehouses } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +17,10 @@ const quickLinks = [
 ] as const;
 
 export default async function HomePage() {
-  const [summary, currentUser, robotOptions, warehouses] = await Promise.all([
+  const [summary, currentUser, robots, warehouses] = await Promise.all([
     getDashboardSummary(),
     getSessionUser(),
-    getRobotOptions(),
+    getRobots(),
     getWarehouses()
   ]);
 
@@ -39,7 +39,7 @@ export default async function HomePage() {
           <h1>仓库机器人控制台</h1>
           <p>集中查看库存、仓库、状态和操作记录，把高频任务压缩到最少点击。</p>
           <div className="hero-actions-row">
-            <QuickActionDrawer robots={robotOptions} warehouses={warehouses} />
+            <QuickActionDrawer robots={robots} warehouses={warehouses} />
             <a className="button-secondary" href="/records">查看记录</a>
             <a className="button-secondary" href="/robots">机器人管理</a>
           </div>
@@ -160,7 +160,7 @@ export default async function HomePage() {
               <strong>快速操作</strong>
               <span>入库、出库、状态变更统一处理。</span>
             </div>
-            <QuickActionDrawer robots={robotOptions} warehouses={warehouses} />
+            <QuickActionDrawer robots={robots} warehouses={warehouses} />
           </div>
         </section>
       ) : null}

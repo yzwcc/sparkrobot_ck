@@ -1,17 +1,17 @@
-﻿import { RobotCreationForm, CheckInForm, CheckOutForm, StatusUpdateForm } from "@/components/RobotForms";
+import { CheckInForm, CheckOutForm, RobotCreationForm, StatusUpdateForm } from "@/components/RobotForms";
 import { RobotTable } from "@/components/RobotTable";
 import { getSessionUser } from "@/lib/auth";
-import { getRobotOptions, getRobots, getWarehouses } from "@/lib/store";
+import { getRobots, getWarehouses } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function RobotsPage() {
-  const [robots, warehouses, robotOptions, currentUser] = await Promise.all([
+  const [robots, warehouses, currentUser] = await Promise.all([
     getRobots(),
     getWarehouses(),
-    getRobotOptions(),
     getSessionUser()
   ]);
+
   const role = currentUser?.role.name ?? "GUEST";
   const canManageStock = role === "ADMIN" || role === "MANAGER";
   const canManageRobots = role === "ADMIN";
@@ -29,7 +29,7 @@ export default async function RobotsPage() {
         {canManageRobots ? (
           <div className="grid-3">
             <RobotCreationForm warehouses={warehouses} />
-            <StatusUpdateForm robots={robotOptions} />
+            <StatusUpdateForm robots={robots} />
             <div className="panel form-card">
               <div className="tag">管理提示</div>
               <h3 style={{ margin: "12px 0 6px" }}>推荐流程</h3>
@@ -52,8 +52,8 @@ export default async function RobotsPage() {
       <section className="section">
         {canManageStock ? (
           <div className="grid-2">
-            <CheckInForm robots={robotOptions} warehouses={warehouses} />
-            <CheckOutForm robots={robotOptions} />
+            <CheckInForm robots={robots} warehouses={warehouses} />
+            <CheckOutForm robots={robots} />
           </div>
         ) : null}
       </section>

@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { StatusPill } from "@/components/StatusPill";
 import { OrderStatus } from "@/lib/types";
-import Link from "next/link";
 
 type Props = {
   code: string;
