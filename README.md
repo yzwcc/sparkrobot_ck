@@ -11,27 +11,41 @@ This is a Next.js + TypeScript warehouse management app for robots.
 - Warehouse overview cards and recent history
 - Activity records with filters
 
+## Why some functions fail
+
+The project uses Prisma with PostgreSQL.
+
+- Read-only pages can still render because the app falls back to demo snapshot data when database reads fail.
+- Real functions such as login, create robot, stock in/out, and warehouse management require a working database.
+- Prisma migration commands require both `DATABASE_URL` and `DIRECT_URL`.
+- If `DIRECT_URL` is missing, Prisma commands fail immediately.
+- If PostgreSQL is not running, API writes and login will fail even if pages still open.
+
 ## Local run
 
 1. Install Node.js 20+.
-2. Run `npm install`.
-3. Copy `.env.example` to `.env` and set `DATABASE_URL`.
-4. Start PostgreSQL:
-   - `docker compose up -d`
-5. Create Prisma migration and seed data:
-   - `npm run prisma:generate`
-   - `npx prisma migrate dev --name init`
-   - `npm run prisma:seed`
-6. Start the app:
-   - `npm run dev`
+2. Install PostgreSQL locally, or install Docker Desktop if you want to use `docker compose`.
+3. Copy `.env.example` to `.env.local`.
+4. Set both `DATABASE_URL` and `DIRECT_URL`.
+5. Start PostgreSQL.
+   - With Docker: `docker compose up -d`
+   - Without Docker: create a `warehouse_robot` database in your local PostgreSQL service
+6. Run `npm install`.
+7. Run `npx prisma migrate deploy`.
+8. Run `npm run prisma:seed`.
+9. Start the app with `npm run dev`.
 
-## Deploy to Vercel
+## Deploy with GitHub + Vercel
 
 1. Push this repository to GitHub.
-2. Create a PostgreSQL database on a hosted provider.
-3. In Vercel, import the GitHub repo.
-4. Set `DATABASE_URL` in Vercel project settings.
-5. Deploy.
+2. Create a hosted PostgreSQL database, for example Neon, Supabase, or Railway.
+3. In GitHub, keep application secrets out of the repo. Do not commit `.env.local`.
+4. In Vercel, import the GitHub repository.
+5. Set these environment variables in Vercel:
+   - `DATABASE_URL`: pooled or standard runtime connection string
+   - `DIRECT_URL`: non-pooled direct connection string for Prisma migrations
+6. Deploy.
+7. After the first deploy, run `npx prisma migrate deploy` against the production database if your platform does not run it automatically.
 
 ## Defaults
 
