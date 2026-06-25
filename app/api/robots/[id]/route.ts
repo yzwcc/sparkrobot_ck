@@ -1,5 +1,6 @@
-import { deleteRobot, updateRobot } from "@/lib/store";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth";
+import { deleteRobot, updateRobot } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const robot = await updateRobot(id, body);
     return Response.json({ data: robot });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "更新失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "更新失败");
   }
 }
 
@@ -25,9 +23,6 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     await deleteRobot(id);
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "删除失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "删除失败");
   }
 }

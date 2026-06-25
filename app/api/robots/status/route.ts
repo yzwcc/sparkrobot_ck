@@ -1,5 +1,6 @@
-﻿import { changeRobotStatus } from "@/lib/store";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireManager } from "@/lib/auth";
+import { changeRobotStatus } from "@/lib/store";
 import { ORDER_STATUSES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -29,9 +30,6 @@ export async function POST(request: Request) {
     );
     return Response.json({ data: robot });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "更新失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "更新失败");
   }
 }

@@ -1,5 +1,6 @@
-import { checkInRobot, checkOutRobot, getRecords } from "@/lib/store";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireManager } from "@/lib/auth";
+import { checkInRobot, checkOutRobot, getRecords } from "@/lib/store";
 import { ORDER_STATUSES, STOCK_ACTIONS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,9 @@ export async function POST(request: Request) {
   try {
     const user = await requireManager();
     const contentType = request.headers.get("content-type") ?? "";
-    const body =
-      contentType.includes("multipart/form-data")
-        ? await request.formData()
-        : await request.json();
+    const body = contentType.includes("multipart/form-data")
+      ? await request.formData()
+      : await request.json();
     const getValue = (key: string) => {
       if (body instanceof FormData) return body.get(key);
       return (body as Record<string, unknown>)[key];
@@ -48,15 +48,12 @@ export async function POST(request: Request) {
       if (!warehouseId) {
         throw new Error("入库需要 warehouseId");
       }
-      const robot = await checkInRobot(robotId, warehouseId, operatorName, note ?? "", user.id, snPhotoUrl);
+      const robot = await checkInRobot(robotId, warehouseId, operatorName, note, user.id, snPhotoUrl);
       return Response.json({ data: robot }, { status: 201 });
     }
-    const robot = await checkOutRobot(robotId, operatorName, note ?? "", user.id, snPhotoUrl);
+    const robot = await checkOutRobot(robotId, operatorName, note, user.id, snPhotoUrl);
     return Response.json({ data: robot }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "提交失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "提交失败");
   }
 }

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { apiErrorResponse } from "@/lib/api-error";
 import { prisma } from "@/lib/prisma";
 import { sessionCookieName } from "@/lib/auth";
 
@@ -36,9 +37,6 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "登录失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "登录失败");
   }
 }

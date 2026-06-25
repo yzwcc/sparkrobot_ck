@@ -1,5 +1,6 @@
-﻿import { prisma } from "@/lib/prisma";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -33,9 +34,6 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "设置失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "设置失败");
   }
 }

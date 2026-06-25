@@ -1,5 +1,6 @@
-﻿import { createWarehouse, getWarehouses } from "@/lib/store";
+import { apiErrorResponse } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth";
+import { createWarehouse, getWarehouses } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,6 @@ export async function POST(request: Request) {
     const warehouse = await createWarehouse(body);
     return Response.json({ data: warehouse }, { status: 201 });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "创建失败" },
-      { status: 400 }
-    );
+    return apiErrorResponse(error, "创建失败");
   }
 }
