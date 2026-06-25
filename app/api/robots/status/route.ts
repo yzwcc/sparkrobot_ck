@@ -15,12 +15,15 @@ export async function POST(request: Request) {
       operatorName?: string;
       note?: string;
     };
+
     if (!robotId || !status || !operatorName) {
       throw new Error("robotId、status 和 operatorName 为必填项");
     }
+
     if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
       throw new Error("无效的订单状态");
     }
+
     const robot = await changeRobotStatus(
       robotId,
       status as (typeof ORDER_STATUSES)[number],
@@ -28,6 +31,7 @@ export async function POST(request: Request) {
       note ?? "",
       user.id
     );
+
     return Response.json({ data: robot });
   } catch (error) {
     return apiErrorResponse(error, "更新失败");

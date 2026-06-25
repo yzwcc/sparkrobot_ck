@@ -9,9 +9,11 @@ export async function POST(request: Request) {
     const username = String(body.username ?? "").trim();
     const password = String(body.password ?? "").trim();
     const displayName = String(body.displayName ?? "").trim();
+
     if (!username || !password || !displayName) {
       throw new Error("用户名、密码和昵称不能为空");
     }
+
     if (password.length < 6) {
       throw new Error("密码至少 6 位");
     }

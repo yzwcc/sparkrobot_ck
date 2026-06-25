@@ -1,8 +1,8 @@
 import { BarList } from "@/components/BarList";
 import { LoginPanel } from "@/components/LoginPanel";
 import { MetricCard } from "@/components/MetricCard";
-import { RecordTable } from "@/components/RecordTable";
 import { QuickActionDrawer } from "@/components/QuickActionDrawer";
+import { RecordTable } from "@/components/RecordTable";
 import { WarehouseSummaryCard } from "@/components/WarehouseSummaryCard";
 import { getSessionUser } from "@/lib/auth";
 import { getDashboardSummary, getRobotOptions, getWarehouses } from "@/lib/store";
@@ -10,10 +10,10 @@ import { getDashboardSummary, getRobotOptions, getWarehouses } from "@/lib/store
 export const dynamic = "force-dynamic";
 
 const quickLinks = [
-  { href: "#quick-actions", title: "快速出入库", desc: "一键打开入库、出库、状态", tag: "高频" },
-  { href: "/robots", title: "机器人档案", desc: "SN、仓库、状态一目了然", tag: "管理" },
-  { href: "/warehouses", title: "仓库总览", desc: "按仓库看库存与结构", tag: "查看" },
-  { href: "/records", title: "操作记录", desc: "追踪全部历史动作", tag: "追踪" }
+  { href: "#quick-actions", title: "快捷出入库", desc: "一键打开入库、出库和状态变更。", tag: "高频" },
+  { href: "/robots", title: "机器人档案", desc: "查看 SN、仓库、状态和备注。", tag: "管理" },
+  { href: "/warehouses", title: "仓库总览", desc: "按仓库查看库存结构和最近记录。", tag: "查看" },
+  { href: "/records", title: "操作记录", desc: "追踪全部历史动作和审计信息。", tag: "追踪" }
 ] as const;
 
 export default async function HomePage() {
@@ -23,6 +23,7 @@ export default async function HomePage() {
     getRobotOptions(),
     getWarehouses()
   ]);
+
   const role = currentUser?.role.name ?? "GUEST";
   const canManageStock = role === "ADMIN" || role === "MANAGER";
   const canManageUsers = role === "ADMIN";
@@ -44,11 +45,11 @@ export default async function HomePage() {
           </div>
           <div className="hero-kpis">
             <div className="hero-kpi">
-              <div className="mini-label">总机器人</div>
+              <div className="mini-label">机器人总数</div>
               <div className="hero-kpi-value">{summary.totalRobots}</div>
             </div>
             <div className="hero-kpi">
-              <div className="mini-label">仓库数</div>
+              <div className="mini-label">仓库数量</div>
               <div className="hero-kpi-value">{summary.totalWarehouses}</div>
             </div>
             <div className="hero-kpi">
@@ -66,15 +67,33 @@ export default async function HomePage() {
           <div className="panel hero-side-visual hero-stats-card hero-glass-card">
             <div className="mini-title">今日概览</div>
             <div className="mini-grid">
-              <div><div className="mini-label">维修 / 损坏</div><div className="mini-value">{summary.repairCount + summary.damagedCount}</div></div>
-              <div><div className="mini-label">缺少配件</div><div className="mini-value">{summary.accessoryCount}</div></div>
-              <div><div className="mini-label">销售</div><div className="mini-value">{summary.saleCount}</div></div>
-              <div><div className="mini-label">最近记录</div><div className="mini-value">{summary.recentRecords.length}</div></div>
+              <div>
+                <div className="mini-label">维修 / 损坏</div>
+                <div className="mini-value">{summary.repairCount + summary.damagedCount}</div>
+              </div>
+              <div>
+                <div className="mini-label">缺少配件</div>
+                <div className="mini-value">{summary.accessoryCount}</div>
+              </div>
+              <div>
+                <div className="mini-label">销售</div>
+                <div className="mini-value">{summary.saleCount}</div>
+              </div>
+              <div>
+                <div className="mini-label">最近记录</div>
+                <div className="mini-value">{summary.recentRecords.length}</div>
+              </div>
             </div>
             <div className="mini-divider" />
             <div className="mini-list">
-              <div className="row small"><span>当前用户</span><strong>{currentUser ? currentUser.displayName : "未登录"}</strong></div>
-              <div className="row small"><span>权限</span><strong>{currentUser?.role.name ?? "GUEST"}</strong></div>
+              <div className="row small">
+                <span>当前用户</span>
+                <strong>{currentUser ? currentUser.displayName : "未登录"}</strong>
+              </div>
+              <div className="row small">
+                <span>权限</span>
+                <strong>{currentUser?.role.name ?? "GUEST"}</strong>
+              </div>
             </div>
           </div>
           <LoginPanel currentUser={currentUser ? { displayName: currentUser.displayName, role: currentUser.role.name } : null} />
@@ -85,7 +104,7 @@ export default async function HomePage() {
         <div className="section-head">
           <div>
             <h2 className="section-title">控制入口</h2>
-            <p className="section-subtitle">减少导航层级，常用模块直接可达。</p>
+            <p className="section-subtitle">减少导航层级，让常用模块直接可达。</p>
           </div>
         </div>
         <div className="entry-grid">
@@ -151,7 +170,9 @@ export default async function HomePage() {
           <div className="panel form-card soft-panel">
             <div className="tag">用户管理</div>
             <h3 style={{ margin: "12px 0 6px" }}>二级管理员管理</h3>
-            <p className="muted" style={{ margin: 0 }}>普通用户可注册，管理员可升级或撤销二级管理员权限。</p>
+            <p className="muted" style={{ margin: 0 }}>
+              普通用户可以注册，管理员可升级或撤销二级管理员权限。
+            </p>
           </div>
         </section>
       ) : null}

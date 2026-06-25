@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
   const currentUser = await getSessionUser();
+
   if (currentUser?.role.name !== "ADMIN") {
     return (
       <main>
@@ -14,7 +15,7 @@ export default async function UsersPage() {
             <div className="tag">无权限</div>
             <h2 style={{ margin: "12px 0 6px" }}>只有管理员可以查看用户管理</h2>
             <p className="muted" style={{ margin: 0 }}>
-              普通用户和二级管理员不能查看这一页。
+              普通用户和二级管理员无法访问这个页面。
             </p>
           </div>
         </section>

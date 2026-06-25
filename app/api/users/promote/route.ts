@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     await requireAdmin();
     const body = await request.json();
     const userId = String(body.userId ?? "").trim();
+
     if (!userId) {
       throw new Error("userId 不能为空");
     }
