@@ -1,4 +1,4 @@
-﻿-- Expand robot type enum with new product catalog.
+-- Expand robot type enum with new product catalog.
 DO $$ BEGIN
   CREATE TYPE "RobotTypeCode_new" AS ENUM (
     'YUANZHENG_A3',
