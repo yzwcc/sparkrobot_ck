@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { ActionPill } from "@/components/StatusPill";
@@ -21,13 +21,39 @@ function originLabel(origin?: string | null) {
 
 export function RecordTable({ records }: { records: StockRecord[] }) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!records.length) {
     return <div className="empty">没有符合条件的记录。</div>;
   }
 
+  const openPreview = async (record: StockRecord) => {
+    setErrorMessage(null);
+
+    if (record.snPhotoUrl) {
+      setPreview(record.snPhotoUrl);
+      return;
+    }
+
+    setLoadingId(record.id);
+    try {
+      const response = await fetch(`/api/stock-records/${record.id}/photo`, { cache: "no-store" });
+      const json = (await response.json().catch(() => null)) as { data?: { photo?: string }; error?: string } | null;
+      if (!response.ok || !json?.data?.photo) {
+        throw new Error(json?.error || "加载图片失败");
+      }
+      setPreview(json.data.photo);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "加载图片失败");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div className="table-wrap">
+      {errorMessage ? <div className="notice-error">{errorMessage}</div> : null}
       <table>
         <thead>
           <tr>
@@ -58,13 +84,14 @@ export function RecordTable({ records }: { records: StockRecord[] }) {
               </td>
               <td>{record.operatorName}</td>
               <td>
-                {record.snPhotoUrl ? (
-                  <button type="button" className="record-photo-link" onClick={() => setPreview(record.snPhotoUrl ?? null)}>
-                    <img src={record.snPhotoUrl} alt="SN 照片" className="record-photo-thumb" />
-                  </button>
-                ) : (
-                  "-"
-                )}
+                <button
+                  type="button"
+                  className="button-secondary"
+                  disabled={loadingId === record.id}
+                  onClick={() => openPreview(record)}
+                >
+                  {loadingId === record.id ? "加载中..." : "查看图片"}
+                </button>
               </td>
               <td>{new Date(record.occurredAt).toLocaleString("zh-CN")}</td>
               <td>{record.note || "-"}</td>

@@ -396,6 +396,43 @@ export async function getRecords(filters: RecordFilter = {}) {
   return filterRecords(data.records, filters);
 }
 
+export async function getRecordPage(
+  filters: RecordFilter = {},
+  options: { page?: number; pageSize?: number; includePhoto?: boolean } = {}
+) {
+  const pageSize = Math.max(1, Math.min(options.pageSize ?? 20, 100));
+  const page = Math.max(1, options.page ?? 1);
+  const records = await getRecords(filters);
+  const total = records.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const start = (currentPage - 1) * pageSize;
+  const items = records.slice(start, start + pageSize).map((record) => ({
+    ...record,
+    snPhotoUrl: options.includePhoto ? record.snPhotoUrl : null
+  }));
+
+  return {
+    items,
+    total,
+    page: currentPage,
+    pageCount,
+    pageSize
+  };
+}
+
+export async function getRecordPhoto(recordId: string) {
+  const data = await getAppData();
+  const record = data.records.find((item) => item.id === recordId);
+  if (!record) {
+    throw new Error("记录不存在");
+  }
+  if (!record.snPhotoUrl) {
+    throw new Error("该记录没有图片");
+  }
+  return record.snPhotoUrl;
+}
+
 export async function getWarehouseDetail(warehouseId: string) {
   const data = await getAppData();
   const warehouse = data.warehouses.find((item) => item.id === warehouseId);

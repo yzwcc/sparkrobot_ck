@@ -6,6 +6,7 @@ import { RecordTable } from "@/components/RecordTable";
 import { WarehouseSummaryCard } from "@/components/WarehouseSummaryCard";
 import { getSessionUser } from "@/lib/auth";
 import { getDashboardSummary, getRobots, getWarehouses } from "@/lib/store";
+import type { Robot, Warehouse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +18,21 @@ const quickLinks = [
 ] as const;
 
 export default async function HomePage() {
-  const [summary, currentUser, robots, warehouses] = await Promise.all([
+  const [summary, currentUser] = await Promise.all([
     getDashboardSummary(),
-    getSessionUser(),
-    getRobots(),
-    getWarehouses()
+    getSessionUser()
   ]);
 
   const role = currentUser?.role.name ?? "GUEST";
   const canManageStock = role === "ADMIN" || role === "MANAGER";
   const canManageUsers = role === "ADMIN";
+
+  let robots: Robot[] = [];
+  let warehouses: Warehouse[] = [];
+
+  if (canManageStock) {
+    [robots, warehouses] = await Promise.all([getRobots(), getWarehouses()]);
+  }
 
   return (
     <main>
@@ -39,7 +45,7 @@ export default async function HomePage() {
           <h1>仓库机器人控制台</h1>
           <p>集中查看库存、仓库、状态和操作记录，把高频任务压缩到最少点击。</p>
           <div className="hero-actions-row">
-            <QuickActionDrawer robots={robots} warehouses={warehouses} />
+            {canManageStock ? <QuickActionDrawer robots={robots} warehouses={warehouses} /> : null}
             <a className="button-secondary" href="/records">查看记录</a>
             <a className="button-secondary" href="/robots">机器人管理</a>
           </div>
