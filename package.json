@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npx tsx scripts/run-prisma.ts generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
+    "postinstall": "npx tsx scripts/run-prisma.ts generate",
+    "prisma:generate": "npx tsx scripts/run-prisma.ts generate",
+    "prisma:migrate": "npx tsx scripts/run-prisma.ts migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "node prisma/seed.mjs"
+    "prisma:studio:local": "npx tsx scripts/run-prisma.ts studio",
+    "prisma:seed": "npx tsx -e \"import('./scripts/env-aliases.ts').then(({ applyDatabaseEnvAliases }) => { applyDatabaseEnvAliases(); return import('./prisma/seed.mjs'); })\""
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
@@ -24,6 +25,7 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "prisma": "^5.20.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.7.2"
   }
 }

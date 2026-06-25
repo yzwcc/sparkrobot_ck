@@ -20,13 +20,16 @@ The project uses Prisma with PostgreSQL.
 - Prisma migration commands require both `DATABASE_URL` and `DIRECT_URL`.
 - If `DIRECT_URL` is missing, Prisma commands fail immediately.
 - If PostgreSQL is not running, API writes and login will fail even if pages still open.
+- On Vercel/Neon, the platform may provide `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING`; the project now maps those automatically.
 
 ## Local run
 
 1. Install Node.js 20+.
 2. Install PostgreSQL locally, or install Docker Desktop if you want to use `docker compose`.
 3. Copy `.env.example` to `.env.local`.
-4. Set both `DATABASE_URL` and `DIRECT_URL`.
+4. Set either:
+   - `DATABASE_URL` and `DIRECT_URL`, or
+   - `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING`
 5. Start PostgreSQL.
    - With Docker: `docker compose up -d`
    - Without Docker: create a `warehouse_robot` database in your local PostgreSQL service
@@ -44,6 +47,7 @@ The project uses Prisma with PostgreSQL.
 5. Set these environment variables in Vercel:
    - `DATABASE_URL`: pooled or standard runtime connection string
    - `DIRECT_URL`: non-pooled direct connection string for Prisma migrations
+   - Or let Vercel Postgres / Neon inject `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING`
 6. Deploy.
 7. After the first deploy, run `npx prisma migrate deploy` against the production database if your platform does not run it automatically.
 
