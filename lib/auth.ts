@@ -10,12 +10,17 @@ export async function getSessionUser() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username: token },
-    include: { role: true }
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: token },
+      include: { role: true }
+    });
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error("Session lookup failed; treating request as anonymous.", error);
+    return null;
+  }
 }
 
 export async function requireAdmin() {

@@ -14,6 +14,7 @@ import {
   StockAction,
   StockOrigin,
   StockRecord,
+  Warehouse,
   WarehouseInput
 } from "@/lib/types";
 import type { $Enums } from "@prisma/client";
@@ -143,6 +144,60 @@ function attachWarehouseName(robot: Robot, warehouseName: string | null) {
   return { ...robot, warehouseName };
 }
 
+function createFallbackSnapshot(): AppData {
+  const now = new Date().toISOString();
+  const warehouses: Warehouse[] = [
+    { id: "fallback-wh-a", code: "WH-A", name: "上海主仓", location: "上海市嘉定区", createdAt: now, updatedAt: now },
+    { id: "fallback-wh-b", code: "WH-B", name: "华东周转仓", location: "苏州市工业园区", createdAt: now, updatedAt: now },
+    { id: "fallback-wh-c", code: "WH-C", name: "维修备件仓", location: "昆山市开发区", createdAt: now, updatedAt: now }
+  ];
+
+  const seedRobots = [
+    { sn: "A3-2024-0001", type: "远征A3" as RobotType, status: "空闲" as OrderStatus, note: "首批样机", warehouseId: warehouses[0].id },
+    { sn: "A3-2024-0002", type: "远征A3" as RobotType, status: "日租" as OrderStatus, note: "", warehouseId: warehouses[0].id },
+    { sn: "A2F-2024-0001", type: "远征A2旗舰款" as RobotType, status: "维修" as OrderStatus, note: "等待轮组配件", warehouseId: warehouses[2].id },
+    { sn: "A2Y-2024-0001", type: "远征A2青春款" as RobotType, status: "销售" as OrderStatus, note: "已分配订单", warehouseId: warehouses[1].id },
+    { sn: "LX2F-2024-0001", type: "灵犀X2旗舰款" as RobotType, status: "缺少配件" as OrderStatus, note: "缺少视觉模块", warehouseId: warehouses[2].id },
+    { sn: "LX2Y-2024-0001", type: "灵犀X2青春款" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouses[0].id },
+    { sn: "D1U-2024-0001", type: "D1 ultra" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouses[0].id },
+    { sn: "D1E-2024-0001", type: "D1 edu" as RobotType, status: "月租" as OrderStatus, note: "", warehouseId: warehouses[1].id },
+    { sn: "D1P-2024-0001", type: "D1 pro" as RobotType, status: "空闲" as OrderStatus, note: "", warehouseId: warehouses[2].id },
+    { sn: "D1M-2024-0001", type: "D1 max" as RobotType, status: "维修" as OrderStatus, note: "", warehouseId: warehouses[2].id }
+  ];
+
+  const robots: Robot[] = seedRobots.map((robot, index) => ({
+    id: `fallback-robot-${index + 1}`,
+    sn: robot.sn,
+    type: robot.type,
+    status: robot.status,
+    note: robot.note,
+    warehouseId: robot.warehouseId,
+    warehouseName: warehouses.find((warehouse) => warehouse.id === robot.warehouseId)?.name ?? null,
+    createdAt: now,
+    updatedAt: now
+  }));
+
+  const records: StockRecord[] = robots.map((robot, index) => ({
+    id: `fallback-record-${index + 1}`,
+    action: "IN",
+    robotId: robot.id,
+    robotSn: robot.sn,
+    robotType: robot.type,
+    warehouseId: robot.warehouseId,
+    warehouseName: robot.warehouseName ?? null,
+    operatorName: "system",
+    snPhotoUrl: null,
+    statusBefore: null,
+    statusAfter: robot.status,
+    origin: "ROBOT_CREATE",
+    note: "Fallback demo data",
+    occurredAt: now,
+    createdAt: now
+  }));
+
+  return { warehouses, robots, records };
+}
+
 async function ensureSeeded() {
   const roleCount = await prisma.role.count();
   if (roleCount > 0) return;
@@ -262,7 +317,12 @@ async function readFromDatabase(): Promise<AppData> {
 }
 
 async function applyFallbackSnapshot(): Promise<AppData> {
-  return readFromDatabase();
+  try {
+    return await readFromDatabase();
+  } catch (error) {
+    console.error("Database read failed; serving fallback snapshot.", error);
+    return createFallbackSnapshot();
+  }
 }
 
 function filterRecords(records: StockRecord[], filters: RecordFilter) {
