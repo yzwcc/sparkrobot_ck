@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -39,17 +39,17 @@ async function main() {
 
   const warehouseA = await prisma.warehouse.upsert({
     where: { code: "WH-A" },
-    update: {},
+    update: { name: "上海主仓", location: "上海市嘉定区" },
     create: { code: "WH-A", name: "上海主仓", location: "上海市嘉定区" }
   });
   const warehouseB = await prisma.warehouse.upsert({
     where: { code: "WH-B" },
-    update: {},
+    update: { name: "华东周转仓", location: "苏州市工业园区" },
     create: { code: "WH-B", name: "华东周转仓", location: "苏州市工业园区" }
   });
   const warehouseC = await prisma.warehouse.upsert({
     where: { code: "WH-C" },
-    update: {},
+    update: { name: "维修备件仓", location: "昆山市开发区" },
     create: { code: "WH-C", name: "维修备件仓", location: "昆山市开发区" }
   });
 
@@ -86,7 +86,11 @@ async function main() {
 
     await prisma.stockRecord.upsert({
       where: { id: `${created.id}-seed-in` },
-      update: {},
+      update: {
+        warehouseId: created.warehouseId,
+        statusAfter: created.status,
+        note: "Seed data"
+      },
       create: {
         id: `${created.id}-seed-in`,
         action: "IN",
@@ -104,20 +108,47 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "zhangyan" },
-    update: {},
-    create: { username: "zhangyan", displayName: "系统管理员", password: "sparkrobot", roleId: adminRole.id }
+    update: {
+      displayName: "系统管理员",
+      password: "sparkrobot",
+      roleId: adminRole.id
+    },
+    create: {
+      username: "zhangyan",
+      displayName: "系统管理员",
+      password: "sparkrobot",
+      roleId: adminRole.id
+    }
   });
 
   await prisma.user.upsert({
     where: { username: "manager" },
-    update: {},
-    create: { username: "manager", displayName: "二级管理员", password: "manager123", roleId: managerRole.id }
+    update: {
+      displayName: "二级管理员",
+      password: "manager123",
+      roleId: managerRole.id
+    },
+    create: {
+      username: "manager",
+      displayName: "二级管理员",
+      password: "manager123",
+      roleId: managerRole.id
+    }
   });
 
   await prisma.user.upsert({
     where: { username: "viewer" },
-    update: {},
-    create: { username: "viewer", displayName: "普通用户", password: "viewer123", roleId: userRole.id }
+    update: {
+      displayName: "普通用户",
+      password: "viewer123",
+      roleId: userRole.id
+    },
+    create: {
+      username: "viewer",
+      displayName: "普通用户",
+      password: "viewer123",
+      roleId: userRole.id
+    }
   });
 }
 
